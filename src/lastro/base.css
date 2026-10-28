@@ -20,10 +20,5 @@ a:hover { color: var(--brass); }
 .lt-alert-warning { border-color: var(--brass); background: var(--brass-soft); }
 .lt-alert-warning .lt-alert-title { color: var(--brass); }
 
-.lt-text-field { display: grid; gap: var(--space-2); }
-.lt-text-field input { background: var(--surface); color: var(--ink); border: 1px solid var(--line-strong); border-radius: var(--radius-md); font: 400 14px/20px var(--font-sans); padding: 9px 12px; width: 100%; }
-.lt-text-field.has-error input { border-color: var(--danger); }
-.lt-text-field input:disabled { opacity: .45; cursor: not-allowed; }
 
 .lt-skeleton { border-radius: var(--radius-sm); }
-.lt-text-field.has-error .lt-field-hint { color: var(--danger); }

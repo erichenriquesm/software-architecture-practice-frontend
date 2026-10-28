@@ -2,6 +2,7 @@ import './tokens.css';
 import './base.css';
 import './components.css';
 import './motion.css';
+import './forms.css';
 
 export { default as LtAlert } from './components/LtAlert.vue';
 export { default as LtAmountField } from './components/LtAmountField.vue';

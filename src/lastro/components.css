@@ -27,16 +27,6 @@
 .lt-side-sell.is-active { color: var(--ask); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ask) 45%, transparent), inset 0 0 0 40px var(--ask-soft); }
 .lt-side:disabled { opacity: .45; cursor: not-allowed; }
 
-.lt-field { display: grid; gap: var(--space-2); }
-.lt-field-label { font: 500 13px/16px var(--font-sans); color: var(--ink-muted); }
-.lt-field-box { display: flex; align-items: center; background: var(--surface); border: 1px solid var(--line-strong); border-radius: var(--radius-md); padding: 0 var(--space-3); }
-.lt-field-box:focus-within { border-color: var(--focus-ring); }
-.lt-field-input { flex: 1; min-width: 0; border: 0; background: transparent; color: var(--ink); font: 400 13px/20px var(--font-mono); font-variant-numeric: tabular-nums; text-align: right; padding: 9px 0; outline: none; }
-.lt-field-input::placeholder { color: var(--ink-faint); }
-.lt-field-asset { color: var(--ink-muted); font: 500 12px/16px var(--font-sans); margin-left: var(--space-2); }
-.lt-field-hint { margin: 0; font: 400 12px/16px var(--font-sans); color: var(--ink-muted); }
-.lt-field.has-error .lt-field-box { border-color: var(--danger); }
-.lt-field.has-error .lt-field-hint { color: var(--danger); }
 
 .lt-badge { display: inline-flex; align-items: center; gap: var(--space-1); font: 600 11px/14px var(--font-sans); padding: 3px 6px; border-radius: var(--radius-sm); border: 1px solid currentColor; }
 .lt-badge::before { content: ''; width: 6px; height: 6px; border-radius: 1px; background: currentColor; }

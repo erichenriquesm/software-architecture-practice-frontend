@@ -1,0 +1,101 @@
+/* Forms: filled fields with the label inside, a soft glow on focus, rounded like the rest of the system. */
+:root {
+  --field-bg: color-mix(in srgb, var(--surface-raised) 70%, var(--surface));
+  --field-bg-hover: var(--surface-raised);
+  --field-border: color-mix(in srgb, var(--line-strong) 45%, transparent);
+  --field-ring: 0 0 0 4px color-mix(in srgb, var(--focus-ring) 18%, transparent);
+}
+
+/* Text field with a floating label */
+.lt-text-field { display: grid; gap: 6px; }
+.lt-input-shell { position: relative; }
+.lt-input {
+  width: 100%; height: 52px; padding: 20px 14px 6px; box-sizing: border-box;
+  background: var(--field-bg); color: var(--ink); font: 400 15px/20px var(--font-sans);
+  border: 1px solid var(--field-border); border-radius: var(--radius-md); outline: none;
+  transition: background-color var(--duration-fast), border-color var(--duration-fast), box-shadow var(--duration-base) var(--ease-out);
+}
+.lt-text-field.has-toggle .lt-input { padding-right: 46px; }
+.lt-input:hover:not(:disabled) { background: var(--field-bg-hover); border-color: var(--line-strong); }
+.lt-input:focus { background: var(--surface); border-color: var(--focus-ring); box-shadow: var(--field-ring); }
+.lt-input-label {
+  position: absolute; left: 15px; top: 16px; pointer-events: none; transform-origin: left top;
+  font: 400 15px/20px var(--font-sans); color: var(--ink-muted);
+  transition: transform var(--duration-base) var(--ease-out), color var(--duration-fast);
+}
+.lt-input:focus + .lt-input-label,
+.lt-input:not(:placeholder-shown) + .lt-input-label,
+.lt-input:-webkit-autofill + .lt-input-label { transform: translateY(-9px) scale(0.78); }
+.lt-input:focus + .lt-input-label { color: var(--focus-ring); }
+.lt-input-toggle {
+  position: absolute; right: 8px; top: 50%; transform: translateY(-50%); display: inline-grid; place-items: center;
+  width: 34px; height: 34px; border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--ink-muted); cursor: pointer;
+  transition: color var(--duration-fast), background-color var(--duration-fast);
+}
+.lt-input-toggle:hover { color: var(--ink); background: color-mix(in srgb, var(--line) 60%, transparent); }
+.lt-input-toggle:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 1px; }
+.lt-text-field.has-error .lt-input { border-color: var(--danger); }
+.lt-text-field.has-error .lt-input:focus { box-shadow: 0 0 0 4px color-mix(in srgb, var(--danger) 18%, transparent); }
+.lt-text-field.has-error .lt-input-label { color: var(--danger); }
+.lt-text-field.is-disabled { opacity: .5; }
+
+/* Amount field: label on top inside the box, the number large and right aligned, the asset as a chip */
+.lt-field { display: grid; gap: 6px; }
+.lt-field-box {
+  display: grid; gap: 2px; padding: 8px 12px 8px 14px; box-sizing: border-box; min-height: 60px; align-content: center;
+  background: var(--field-bg); border: 1px solid var(--field-border); border-radius: var(--radius-md); cursor: text;
+  transition: background-color var(--duration-fast), border-color var(--duration-fast), box-shadow var(--duration-base) var(--ease-out);
+}
+.lt-field-box:hover { background: var(--field-bg-hover); border-color: var(--line-strong); }
+.lt-field-box:focus-within { background: var(--surface); border-color: var(--focus-ring); box-shadow: var(--field-ring); }
+.lt-field-label { font: 500 12px/14px var(--font-sans); color: var(--ink-muted); cursor: text; }
+.lt-field-box:focus-within .lt-field-label { color: var(--focus-ring); }
+.lt-field-row { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.lt-field-input { flex: 1; min-width: 0; border: 0; background: transparent; color: var(--ink); font: 500 18px/24px var(--font-mono); font-variant-numeric: tabular-nums; text-align: right; padding: 0; outline: none; }
+.lt-field-input::placeholder { color: var(--ink-faint); }
+.lt-field-asset { flex: none; padding: 3px 8px; border-radius: var(--radius-pill); background: color-mix(in srgb, var(--line) 70%, transparent); color: var(--ink-muted); font: 600 11px/14px var(--font-sans); letter-spacing: .04em; margin: 0; }
+.lt-field.has-error .lt-field-box { border-color: var(--danger); }
+.lt-field.has-error .lt-field-box:focus-within { box-shadow: 0 0 0 4px color-mix(in srgb, var(--danger) 18%, transparent); }
+.lt-field.is-disabled { opacity: .5; }
+
+/* Hints and errors slide in under the field */
+.lt-field-hint { display: flex; align-items: flex-start; gap: 6px; margin: 0; padding-left: 2px; font: 400 12px/16px var(--font-sans); color: var(--ink-muted); }
+.lt-field-hint.lt-field-error, .lt-field.has-error .lt-field-hint { color: var(--danger); }
+.lt-hint-icon { flex: none; margin-top: 1px; }
+.lt-hint-enter-active { transition: opacity var(--duration-base) var(--ease-out), transform var(--duration-base) var(--ease-out); }
+.lt-hint-leave-active { transition: opacity var(--duration-fast) linear; }
+.lt-hint-enter-from { opacity: 0; transform: translateY(-4px); }
+.lt-hint-leave-to { opacity: 0; }
+
+/* Native selects in the same family */
+.lt-select {
+  appearance: none; height: 44px; padding: 0 38px 0 14px; box-sizing: border-box; max-width: 100%;
+  background: var(--field-bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none' stroke='%2397a3af' stroke-width='1.6' stroke-linecap='round'%3E%3Cpath d='M3 4.5 6 7.5 9 4.5'/%3E%3C/svg%3E") no-repeat right 14px center;
+  color: var(--ink); font: 500 14px/20px var(--font-sans); border: 1px solid var(--field-border); border-radius: var(--radius-md); cursor: pointer;
+  transition: background-color var(--duration-fast), border-color var(--duration-fast), box-shadow var(--duration-base);
+}
+.lt-select:hover { background-color: var(--field-bg-hover); border-color: var(--line-strong); }
+.lt-select:focus { outline: none; border-color: var(--focus-ring); box-shadow: var(--field-ring); }
+
+/* Buttons: taller, rounder, a top highlight on the filled ones */
+.lt-btn { border-radius: var(--radius-md); }
+.lt-btn-md { min-height: 46px; padding: 0 var(--space-6); font-size: 14px; }
+.lt-btn-sm { min-height: 32px; padding: 0 var(--space-3); }
+.lt-btn-primary, .lt-btn-buy, .lt-btn-sell { justify-content: center; background-image: linear-gradient(180deg, color-mix(in srgb, var(--ink) 7%, transparent), transparent 60%); }
+.lt-btn-primary:not(:disabled) { background-color: color-mix(in srgb, var(--brass) 16%, var(--control)); color: var(--ink); }
+.lt-btn-primary:hover:not(:disabled) { background-color: color-mix(in srgb, var(--brass) 24%, var(--control)); }
+
+/* Side toggle and badges follow the new radius */
+.lt-sides { border-radius: var(--radius-md); padding: 3px; }
+.lt-sides::before { top: 3px; bottom: 3px; left: 3px; width: calc(50% - 4px); border-radius: calc(var(--radius-md) - 3px); }
+.lt-side { padding: 10px var(--space-4); border-radius: calc(var(--radius-md) - 3px); }
+.lt-badge { border-radius: var(--radius-pill); padding: 3px 9px; }
+.lt-badge::before { border-radius: 50%; }
+
+@media (max-height: 760px), (max-width: 760px) {
+  .lt-input { height: 48px; padding-top: 18px; }
+  .lt-input-label { top: 14px; }
+  .lt-field-box { min-height: 54px; padding-block: 6px; }
+  .lt-field-input { font-size: 16px; }
+  .lt-btn-md { min-height: 42px; }
+}

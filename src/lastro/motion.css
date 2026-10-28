@@ -73,8 +73,6 @@ body {
 .lt-sides .lt-side.is-active { background: transparent; box-shadow: none; }
 
 /* Inputs: focus glows instead of only changing the border */
-.lt-field-box, .lt-text-field input { transition: border-color var(--duration-fast), box-shadow var(--duration-base); }
-.lt-field-box:focus-within, .lt-text-field input:focus { border-color: var(--focus-ring); box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus-ring) 22%, transparent); outline: none; }
 
 /* Tables: rows answer the pointer */
 .lt-table tbody tr { transition: background-color var(--duration-fast); }
