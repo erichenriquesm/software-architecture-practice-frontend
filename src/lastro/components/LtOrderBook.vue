@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Decimal } from 'decimal.js';
 import { computed } from 'vue';
 import { formatDecimal } from '../format';
 
@@ -11,11 +12,11 @@ const props = withDefaults(defineProps<{ asks: readonly LtDepthLevel[]; bids: re
   decimals: 2,
 });
 
-const byPriceDescending = (levels: readonly LtDepthLevel[]) => [...levels].sort((first, second) => Number(second.price) - Number(first.price));
+const byPriceDescending = (levels: readonly LtDepthLevel[]) => [...levels].sort((first, second) => new Decimal(second.price).comparedTo(first.price));
 const asks = computed(() => byPriceDescending(props.asks));
 const bids = computed(() => byPriceDescending(props.bids));
-const largest = computed(() => Math.max(0, ...[...props.asks, ...props.bids].map((level) => Number(level.quantity))));
-const barWidth = (level: LtDepthLevel) => `${largest.value > 0 ? (Number(level.quantity) / largest.value) * 100 : 0}%`;
+const largest = computed(() => Decimal.max(0, ...[...props.asks, ...props.bids].map((level) => level.quantity)));
+const barWidth = (level: LtDepthLevel) => `${largest.value.isZero() ? 0 : new Decimal(level.quantity).dividedBy(largest.value).times(100).toFixed(2)}%`;
 </script>
 
 <template>

@@ -9,6 +9,8 @@ export interface UseFormOutput<TValues extends Record<string, string>, TParsed> 
   touch(field: keyof TValues): void;
   /** Validates everything; returns the parsed values, or undefined and shows every error. */
   validate(): TParsed | undefined;
+  /** Back to the given values with nothing touched, e.g. after a successful submit. */
+  reset(next?: Partial<TValues>): void;
 }
 
 /** Form state for a Zod schema: errors show after a field is touched (blur) or after a submit attempt. */
@@ -48,6 +50,11 @@ export const useForm = <TValues extends Record<string, string>, TParsed>(schema:
       submitted.value = true;
       const result = schema.safeParse({ ...values });
       return result.success ? result.data : undefined;
+    },
+    reset: (next = {}) => {
+      Object.assign(values, initial, next);
+      touched.clear();
+      submitted.value = false;
     },
   };
 };

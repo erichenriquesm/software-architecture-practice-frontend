@@ -14,6 +14,7 @@ export const useSignup = (options: { onSignedIn: () => void }) => {
   const form = useForm<SignupValues, SignupFields>(signupSchema, { name: '', email: '', document: '', password: '' });
 
   const mutation = useMutation({
+    meta: { expectsUnauthenticated: true },
     mutationFn: async (fields: SignupFields) => {
       await api.signup(fields);
       await api.login({ email: fields.email, password: fields.password });

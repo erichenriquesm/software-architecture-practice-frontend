@@ -14,6 +14,7 @@ export const useLogin = (options: { onSignedIn: () => void }) => {
   const form = useForm<LoginValues, LoginValues>(loginSchema, { email: '', password: '' });
 
   const mutation = useMutation({
+    meta: { expectsUnauthenticated: true },
     mutationFn: async (credentials: LoginValues) => {
       await api.login({ email: credentials.email.trim(), password: credentials.password });
       return api.me();
