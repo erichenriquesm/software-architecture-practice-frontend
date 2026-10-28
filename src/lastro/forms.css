@@ -99,3 +99,6 @@
   .lt-field-input { font-size: 16px; }
   .lt-btn-md { min-height: 42px; }
 }
+
+/* The amount box shows focus with its own ring; the bare input inside must not draw a second outline */
+.lt-field-input:focus, .lt-field-input:focus-visible, .lt-input:focus-visible { outline: none; }

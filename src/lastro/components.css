@@ -18,7 +18,7 @@
 .lt-btn-ghost:hover:not(:disabled) { color: var(--ink); background: var(--surface-raised); }
 .lt-btn:disabled { opacity: .45; cursor: not-allowed; }
 .lt-btn.is-loading { cursor: progress; }
-.lt-btn:focus-visible, .lt-side:focus-visible, .lt-field-input:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.lt-btn:focus-visible, .lt-side:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
 
 .lt-sides { display: inline-grid; grid-template-columns: 1fr 1fr; background: var(--surface-raised); border-radius: var(--radius-md); padding: 2px; gap: 2px; min-width: 240px; }
 .lt-side { font: 500 13px/16px var(--font-sans); padding: 7px var(--space-4); border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--ink-muted); cursor: pointer; transition: background-color 120ms, color 120ms; }
