@@ -1,6 +1,6 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/vue';
 import { http, HttpResponse } from 'msw';
-import { afterEach, beforeEach, describe, expect, test } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { OrdersTable } from '@/contexts/orders';
 import type { OrderResponse } from '@/contexts/orders/infra/orders.api';
 import { renderWithApp } from '../../support/renderWithApp';
@@ -37,6 +37,7 @@ describe('Orders table', () => {
     expect(second?.textContent).toContain('83.000,00');
     expect(third?.textContent).toContain('▼ Venda');
     expect(within(first!).getByRole('link').getAttribute('href')).toBe('/ordens/o-open');
+    expect(within(first!).getAllByRole('link')).toHaveLength(1);
     expect(screen.getAllByRole('button', { name: /^Cancelar ordem/ })).toHaveLength(2);
   });
 
@@ -105,6 +106,63 @@ describe('Orders table', () => {
     expect(await screen.findByText('Aberta')).toBeTruthy();
   });
 
+  test('Should open the order from its row, through one link named after the order', async () => {
+    serveOrders(() => [open]);
+    const { router } = await renderWithApp(OrdersTable, { props: { accountId }, provide: fastOrdersApi });
+    await screen.findByText('Aberta');
+
+    const link = within(rows()[0]!).getByRole('link');
+    expect(link.textContent).toMatch(/, ver ordem de compra$/);
+    expect(link.classList.contains('orders-link')).toBe(true);
+    await fireEvent.click(link);
+
+    await waitFor(() => expect(router.currentRoute.value.fullPath).toBe('/ordens/o-open'));
+  });
+
+  test('Should ask before cancelling, keep the order on Manter and on Escape, and move focus sensibly', async () => {
+    serveOrders(() => [open]);
+    const requests: unknown[] = [];
+    server.use(
+      http.post('/cancel_order', async ({ request }) => {
+        requests.push(await request.json());
+        return HttpResponse.json({ orderId: open.orderId, status: 'cancelling' }, { status: 202 });
+      }),
+    );
+    await renderWithApp(OrdersTable, { props: { accountId }, provide: fastOrdersApi });
+    const trigger = await screen.findByRole('button', { name: /^Cancelar ordem de compra/ });
+
+    await fireEvent.click(trigger);
+    const question = screen.getByRole('group', { name: /^Cancelar ordem de compra.*\?$/ });
+    const keep = within(question).getByRole('button', { name: 'Manter' });
+    await waitFor(() => expect(document.activeElement).toBe(keep));
+    expect(trigger.getAttribute('aria-expanded')).toBe('true');
+
+    await fireEvent.click(keep);
+    expect(screen.queryByRole('button', { name: 'Sim, cancelar' })).toBeNull();
+    await waitFor(() => expect(document.activeElement).toBe(trigger));
+
+    await fireEvent.click(trigger);
+    await fireEvent.keyDown(screen.getByRole('button', { name: 'Sim, cancelar' }), { key: 'Escape' });
+    expect(screen.queryByRole('button', { name: 'Sim, cancelar' })).toBeNull();
+
+    expect(requests).toHaveLength(0);
+  });
+
+  test('Should drop the question by itself after a few seconds', async () => {
+    serveOrders(() => [open]);
+    await renderWithApp(OrdersTable, { props: { accountId }, provide: fastOrdersApi });
+    const trigger = await screen.findByRole('button', { name: /^Cancelar ordem de compra/ });
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    try {
+      await fireEvent.click(trigger);
+      expect(screen.getByRole('button', { name: 'Sim, cancelar' })).toBeTruthy();
+      await vi.advanceTimersByTimeAsync(5_000);
+      expect(screen.queryByRole('button', { name: 'Sim, cancelar' })).toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   test('Should cancel an order with an Idempotency-Key and show the new status', async () => {
     let current: readonly OrderResponse[] = [open];
     serveOrders(() => current);
@@ -119,6 +177,8 @@ describe('Orders table', () => {
     await renderWithApp(OrdersTable, { props: { accountId }, provide: fastOrdersApi });
 
     await fireEvent.click(await screen.findByRole('button', { name: /^Cancelar ordem de compra/ }));
+    expect(requests).toHaveLength(0);
+    await fireEvent.click(screen.getByRole('button', { name: 'Sim, cancelar' }));
 
     expect(await screen.findByText('Cancelando')).toBeTruthy();
     expect(requests).toEqual([{ key: expect.stringMatching(/^[0-9a-f-]{36}$/), body: { orderId: 'o-open' } }]);
@@ -137,6 +197,7 @@ describe('Orders table', () => {
     await renderWithApp(OrdersTable, { props: { accountId }, provide: fastOrdersApi });
 
     await fireEvent.click(await screen.findByRole('button', { name: /^Cancelar ordem/ }));
+    await fireEvent.click(screen.getByRole('button', { name: 'Sim, cancelar' }));
 
     expect((await screen.findByRole('alert')).textContent).toContain('Esta ordem não pode mais ser cancelada.');
     await waitFor(() => expect(screen.getByText('Executada')).toBeTruthy());

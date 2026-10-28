@@ -12,10 +12,11 @@ const props = defineProps<{
   available?: Readonly<Partial<Record<string, string>>> | undefined;
   bestBid?: string | undefined;
   bestAsk?: string | undefined;
+  lastPrice?: string | undefined;
 }>();
 const emit = defineEmits<{ placed: [orderId: string] }>();
 
-const ticket = useOrderTicket({ market: props.market, available: () => props.available, onPlaced: (orderId) => emit('placed', orderId) });
+const ticket = useOrderTicket({ market: props.market, available: () => props.available, onPlaced: (orderId) => emit('placed', orderId), lastPrice: () => props.lastPrice });
 const { form, side, step, draft, placed, total, reservation, availableForSide, balanceUse, canFillShares, activeShare, pending, blocked, secondsLeft, errorMessage, errorIsWarning, rejection } = ticket;
 const submitButton = useTemplateRef<{ $el: HTMLElement }>('submit');
 const priceBox = useTemplateRef<HTMLElement>('priceBox');

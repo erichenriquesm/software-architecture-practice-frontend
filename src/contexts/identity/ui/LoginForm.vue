@@ -2,6 +2,7 @@
 import { LtAlert, LtButton, LtTextField } from '@/lastro';
 import { useLogin } from '../application/useLogin';
 
+const props = defineProps<{ sessionEnded?: boolean | undefined }>();
 const emit = defineEmits<{ signedIn: [] }>();
 const { form, submit, pending, errorMessage, blocked } = useLogin({ onSignedIn: () => emit('signedIn') });
 </script>
@@ -16,6 +17,7 @@ const { form, submit, pending, errorMessage, blocked } = useLogin({ onSignedIn: 
 
     <Transition name="auth-alert">
       <LtAlert v-if="errorMessage" :key="errorMessage.title" :class="['auth-alert', { 'is-blocked': blocked }]" :tone="blocked ? 'warning' : 'danger'" :title="errorMessage.title" :detail="errorMessage.detail" />
+      <LtAlert v-else-if="props.sessionEnded" key="session-ended" class="auth-alert" title="Sua sessão terminou. Entre de novo para continuar." />
     </Transition>
 
     <LtTextField id="login-email" v-model="form.values.email" class="lt-rise lt-rise-1" label="E-mail" type="email" autocomplete="username" :error="form.errors.email" :disabled="blocked" @blur="form.touch('email')" />

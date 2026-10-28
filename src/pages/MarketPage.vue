@@ -97,6 +97,7 @@ const refreshAfterPlacing = () => {
             :available="available"
             :best-bid="view.bestBid.value"
             :best-ask="view.bestAsk.value"
+            :last-price="view.lastPrice.value"
             @placed="refreshAfterPlacing"
           />
         </div>

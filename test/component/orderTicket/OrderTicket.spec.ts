@@ -16,8 +16,11 @@ const orderId = '0199d5f4-2b9a-7c3e-9a51-2f1d3c4b5a70';
 /** The real HTTP client and its retries, without the waiting between attempts. */
 const api = createOrderTicketApi(createHttpClient({ sleep: async () => undefined }));
 
-const renderTicket = (available: Record<string, string> = { USD: '59100.00', BTC: '1.25' }) =>
-  renderWithApp(OrderTicket, { props: { market, available, bestAsk: '83100.00', bestBid: '83000.00' }, provide: { [orderTicketApiKey as symbol]: api } });
+const renderTicket = (available: Record<string, string> = { USD: '59100.00', BTC: '1.25' }, extra: Record<string, unknown> = {}) =>
+  renderWithApp(OrderTicket, { props: { market, available, bestAsk: '83100.00', bestBid: '83000.00', ...extra }, provide: { [orderTicketApiKey as symbol]: api } });
+
+const priceField = () => screen.getByLabelText('Preço limite') as HTMLInputElement;
+const quantityField = () => screen.getByLabelText('Quantidade') as HTMLInputElement;
 
 const fillOrder = async (price: string, quantity: string) => {
   await fireEvent.update(screen.getByLabelText('Preço limite'), price);
@@ -246,5 +249,68 @@ describe('Order ticket', () => {
     // Then
     expect((screen.getByLabelText('Preço limite') as HTMLInputElement).value).toBe('83.000,00');
     expect(screen.getByText('Preço limite 83.000,00 USD')).toBeTruthy();
+  });
+  test('Should not call an empty field a mistake on blur, only after a submit attempt', async () => {
+    await renderTicket();
+
+    await fireEvent.blur(priceField());
+    await fireEvent.blur(quantityField());
+    expect(screen.queryByText('Informe o preço limite.')).toBeNull();
+    expect(screen.queryByText('Informe a quantidade.')).toBeNull();
+
+    await fireEvent.click(screen.getByRole('button', { name: 'Comprar BTC' }));
+    expect(screen.getByText('Informe o preço limite.')).toBeTruthy();
+    expect(screen.getByText('Informe a quantidade.')).toBeTruthy();
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  test('Should still point out a malformed value as soon as the field is left', async () => {
+    await renderTicket();
+
+    await fireEvent.update(priceField(), '83000,005');
+    await fireEvent.blur(priceField());
+
+    expect(screen.getByText('Use um preço múltiplo de 0,01 USD.')).toBeTruthy();
+  });
+
+  test('Should start the price from the last trade once and keep it when the side changes', async () => {
+    const { rerender } = await renderTicket(undefined, { lastPrice: undefined });
+    expect(priceField().value).toBe('');
+
+    await rerender({ lastPrice: '83050.00' });
+    expect(priceField().value).toBe('83.050,00');
+
+    await fireEvent.click(screen.getByRole('radio', { name: 'Venda' }));
+    expect(priceField().value).toBe('83.050,00');
+
+    await fireEvent.update(priceField(), '82000,00');
+    await rerender({ lastPrice: '83070.00' });
+    expect(priceField().value).toBe('82000,00');
+  });
+
+  test('Should not overwrite a price the user typed before the market data arrived', async () => {
+    const { rerender } = await renderTicket(undefined, { lastPrice: undefined });
+
+    await fireEvent.update(priceField(), '81000,00');
+    await rerender({ lastPrice: '83050.00' });
+
+    expect(priceField().value).toBe('81000,00');
+  });
+
+  test('Should clear the quantity and keep the price after the order is placed', async () => {
+    server.use(
+      http.post('/place_order', () => HttpResponse.json({ orderId, status: 'pending' }, { status: 202 })),
+      http.get(`/orders/${orderId}`, () => HttpResponse.json({ orderId, status: 'open', statusReason: null })),
+    );
+    await renderTicket();
+    await fillOrder('83000,00', '0,5');
+
+    const dialog = await openConfirmation();
+    await fireEvent.click(within(dialog).getByRole('button', { name: 'Comprar BTC' }));
+
+    expect(await screen.findByText('Sua ordem entrou no livro.')).toBeTruthy();
+    expect(priceField().value).toBe('83000,00');
+    expect(quantityField().value).toBe('');
+    expect(screen.queryByText('Informe a quantidade.')).toBeNull();
   });
 });

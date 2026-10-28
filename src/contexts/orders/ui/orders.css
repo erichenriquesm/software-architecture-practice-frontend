@@ -36,8 +36,23 @@
 .orders-row td:first-child { box-shadow: inset 2px 0 0 transparent; transition: box-shadow var(--duration-base); }
 .orders-row.is-buy:hover td:first-child, .orders-row.is-buy:focus-within td:first-child { box-shadow: inset 2px 0 0 var(--bid); }
 .orders-row.is-sell:hover td:first-child, .orders-row.is-sell:focus-within td:first-child { box-shadow: inset 2px 0 0 var(--ask); }
-.orders-link { text-decoration: none; }
-.orders-link:hover { color: var(--brass); text-decoration: underline; }
+/* The whole row opens the order: the time link stretches over the row, and only the cancel controls sit above it */
+.orders-link { text-decoration: none; color: inherit; }
+.orders-link::after { content: ''; position: absolute; inset: 0; border-radius: 2px; }
+.orders-link:focus-visible { outline: none; }
+.orders-link:focus-visible::after { box-shadow: inset 0 0 0 2px var(--focus-ring); }
+.orders-row:hover .orders-link { color: var(--ink); }
+.orders-panel:not(.is-phone) .orders-cell-action { width: 1%; }
+.orders-actions { position: relative; z-index: 1; display: inline-flex; vertical-align: middle; }
+.orders-chevron { display: inline-block; width: 12px; margin-left: 6px; vertical-align: middle; text-align: right; font: 400 18px/1 var(--font-sans); color: var(--ink-faint); transition: color var(--duration-fast), transform var(--duration-base) var(--ease-out); }
+.orders-row:hover .orders-chevron, .orders-row:focus-within .orders-chevron { color: var(--brass); transform: translateX(2px); }
+/* Cancel asks once, in place: the two answers cover the button, without moving the columns */
+.orders-cancel.is-asking { visibility: hidden; }
+.orders-confirm { position: absolute; top: 50%; right: 0; display: inline-flex; gap: 4px; padding: 2px; transform: translateY(-50%); border-radius: var(--radius-md); background: var(--surface-raised); box-shadow: var(--shadow-overlay); white-space: nowrap; }
+.orders-confirm-enter-active { transition: opacity var(--duration-base) var(--ease-out), transform var(--duration-base) var(--ease-out); }
+.orders-confirm-leave-active { transition: opacity var(--duration-fast) linear; }
+.orders-confirm-enter-from { opacity: 0; transform: translate(6px, -50%); }
+.orders-confirm-leave-to { opacity: 0; }
 .orders-side { font-weight: 500; }
 .orders-side-buy { color: var(--bid); }
 .orders-side-sell { color: var(--ask); }

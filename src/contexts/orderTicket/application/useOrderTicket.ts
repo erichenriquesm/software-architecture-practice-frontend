@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from '@tanstack/vue-query';
 import { Decimal } from 'decimal.js';
-import { computed, ref, toValue } from 'vue';
+import { computed, ref, toValue, watch } from 'vue';
 import type { MaybeRefOrGetter } from 'vue';
 import type { Market } from '@/entities/market';
 import type { Side } from '@/entities/order';
@@ -24,6 +24,8 @@ export interface OrderTicketInput {
   /** Free balance per asset; undefined while the balances are loading. */
   readonly available: MaybeRefOrGetter<Readonly<Partial<Record<string, string>>> | undefined>;
   readonly onPlaced?: ((orderId: string) => void) | undefined;
+  /** The last trade price: an empty price field starts from it the first time it is known. */
+  readonly lastPrice?: MaybeRefOrGetter<string | undefined>;
 }
 
 export interface PlacedOrder {
@@ -55,6 +57,8 @@ export const useOrderTicket = (input: OrderTicketInput) => {
       step.value = 'editing';
       unfinished = undefined;
       placed.value = { orderId: response.orderId, order: intent.order };
+      // The price stays for a follow-up order; the quantity goes, so a second click cannot resend this one by accident
+      form.reset({ side: form.values.side, price: form.values.price });
       input.onPlaced?.(response.orderId);
     },
     onError: (error, intent) => {
@@ -87,6 +91,18 @@ export const useOrderTicket = (input: OrderTicketInput) => {
     form.values.price = formatDecimal(price, decimalPlaces(market.tickSize));
     form.touch('price');
   };
+
+  /** Starts from the last trade price once, unless the user already typed one; never touches the field afterwards. */
+  let prefilled = false;
+  watch(
+    () => toValue(input.lastPrice),
+    (lastPrice) => {
+      if (prefilled || lastPrice === undefined) return;
+      prefilled = true;
+      if (form.values.price.trim() === '') form.values.price = formatDecimal(lastPrice, decimalPlaces(market.tickSize));
+    },
+    { immediate: true },
+  );
 
   const quantityFor = (share: string) => quantityForShare(market, form.values.side, share, availableForSide.value, form.values.price);
 

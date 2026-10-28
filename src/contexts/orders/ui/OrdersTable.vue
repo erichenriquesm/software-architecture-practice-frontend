@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
 import { sideLabels } from '@/entities/order';
 import { LtAlert, LtButton, LtHelp, LtStatusBadge, useFitCount, useMediaQuery } from '@/lastro';
 import { canCancel, fillPercentage, isLive, orderFilterLabels, orderFilters } from '../domain/order';
@@ -20,6 +20,7 @@ const marks = { buy: '▲', sell: '▼' } as const;
 const shortFilterLabels: Readonly<Record<OrderFilter, string>> = { all: 'Todas', open: 'Abertas', filled: 'Executadas', closed: 'Canceladas' };
 const showTable = computed(() => isLoading.value || orders.value.length > 0);
 const cancelLabel = (order: Order) => `Cancelar ordem de ${sideLabels[order.side].toLowerCase()} criada em ${formatShortTime(order.createdAt)}`;
+const openLabel = (order: Order) => `, ver ordem de ${sideLabels[order.side].toLowerCase()}`;
 const countLabel = (count: number) => (count === 1 ? '1 ordem' : `${count} ordens`);
 
 /**
@@ -47,6 +48,55 @@ const rangeLabel = computed(() => pageRangeLabel(pageView.value, orders.value.le
 const goTo = (page: number) => {
   requestedPage.value = page;
 };
+
+/**
+ * Cancelling from the list asks once, right where the button was: "Sim, cancelar" or "Manter". The question goes away
+ * by itself after a few seconds, on Escape, when focus leaves it or on a click elsewhere, and the order stays.
+ */
+const confirmWindowMs = 5_000;
+const confirmingId = ref<string>();
+let confirmTimer: ReturnType<typeof setTimeout> | undefined;
+const triggerId = (orderId: string) => `orders-cancel-${orderId}`;
+const keepId = (orderId: string) => `orders-keep-${orderId}`;
+const focusById = (id: string) => void nextTick(() => document.getElementById(id)?.focus());
+const onPointerDown = (event: PointerEvent) => {
+  const group = confirmingId.value ? document.getElementById(`orders-confirm-${confirmingId.value}`) : null;
+  if (!(event.target instanceof Node) || !group?.contains(event.target)) stopConfirming(false);
+};
+const stopConfirming = (returnFocus: boolean) => {
+  const orderId = confirmingId.value;
+  if (!orderId) return;
+  const group = document.getElementById(`orders-confirm-${orderId}`);
+  const focusWasInside = group?.contains(document.activeElement) ?? false;
+  confirmingId.value = undefined;
+  clearTimeout(confirmTimer);
+  document.removeEventListener('pointerdown', onPointerDown);
+  if (returnFocus || focusWasInside) focusById(triggerId(orderId));
+};
+const askToCancel = (orderId: string) => {
+  stopConfirming(false);
+  confirmingId.value = orderId;
+  confirmTimer = setTimeout(() => stopConfirming(false), confirmWindowMs);
+  document.addEventListener('pointerdown', onPointerDown);
+  focusById(keepId(orderId));
+};
+/** Tabbing out of the question keeps the order; focus moving between its two buttons does not. */
+const onConfirmFocusOut = (event: FocusEvent) => {
+  const next = event.relatedTarget;
+  if (next instanceof Node && !(event.currentTarget as HTMLElement).contains(next)) stopConfirming(false);
+};
+const confirmCancel = (orderId: string) => {
+  stopConfirming(false);
+  cancel(orderId);
+  focusById(triggerId(orderId));
+};
+watch(paged, (visible) => {
+  if (confirmingId.value && !visible.some((order) => order.orderId === confirmingId.value && canCancel(order))) stopConfirming(false);
+});
+onBeforeUnmount(() => {
+  clearTimeout(confirmTimer);
+  document.removeEventListener('pointerdown', onPointerDown);
+});
 </script>
 
 <template>
@@ -107,7 +157,9 @@ const goTo = (page: number) => {
         </tbody>
         <TransitionGroup v-else tag="tbody" name="orders-row">
           <tr v-for="order in paged" :key="order.orderId" :class="['orders-row', `is-${order.side}`]">
-            <td class="lt-num is-muted orders-cell-time"><RouterLink :to="`/ordens/${order.orderId}`" class="orders-link">{{ formatShortTime(order.createdAt) }}</RouterLink></td>
+            <td class="lt-num is-muted orders-cell-time">
+              <RouterLink :to="`/ordens/${order.orderId}`" class="orders-link">{{ formatShortTime(order.createdAt) }}<span class="lt-visually-hidden">{{ openLabel(order) }}</span></RouterLink>
+            </td>
             <td :class="`orders-cell-side orders-side orders-side-${order.side}`"><span aria-hidden="true">{{ marks[order.side] }}</span> {{ sideLabels[order.side] }}</td>
             <td class="is-num orders-cell-price" data-label="Preço">{{ formatAmount(order.price, assetsOf(order.marketId).quote) }}</td>
             <td class="is-num orders-cell-qty" data-label="Qtd.">{{ formatAmount(order.quantity, assetsOf(order.marketId).base) }}</td>
@@ -121,7 +173,28 @@ const goTo = (page: number) => {
             <td class="is-num is-muted orders-cell-avg" data-label="Preço médio">{{ order.fillPrice === undefined ? '–' : formatAmount(order.fillPrice, assetsOf(order.marketId).quote) }}</td>
             <td class="orders-cell-status"><span :class="['orders-status', { 'is-live': isLive(order.status) }]"><LtStatusBadge :status="order.status" /></span></td>
             <td class="is-num orders-cell-action">
-              <LtButton v-if="canCancel(order)" variant="ghost" size="sm" class="orders-cancel" :aria-label="cancelLabel(order)" :loading="cancellingId === order.orderId" @click="cancel(order.orderId)">Cancelar ordem</LtButton>
+              <span v-if="canCancel(order)" class="orders-actions" @keydown.esc="stopConfirming(true)">
+                <LtButton
+                  :id="triggerId(order.orderId)"
+                  variant="ghost"
+                  size="sm"
+                  :class="['orders-cancel', { 'is-asking': confirmingId === order.orderId }]"
+                  :aria-label="cancelLabel(order)"
+                  :aria-expanded="confirmingId === order.orderId"
+                  :aria-controls="confirmingId === order.orderId ? `orders-confirm-${order.orderId}` : undefined"
+                  :loading="cancellingId === order.orderId"
+                  @click="askToCancel(order.orderId)"
+                >
+                  Cancelar ordem
+                </LtButton>
+                <Transition name="orders-confirm">
+                  <span v-if="confirmingId === order.orderId" :id="`orders-confirm-${order.orderId}`" role="group" :aria-label="`${cancelLabel(order)}?`" class="orders-confirm" @focusout="onConfirmFocusOut">
+                    <LtButton :id="keepId(order.orderId)" variant="ghost" size="sm" @click="stopConfirming(true)">Manter</LtButton>
+                    <LtButton variant="primary" size="sm" @click="confirmCancel(order.orderId)">Sim, cancelar</LtButton>
+                  </span>
+                </Transition>
+              </span>
+              <span class="orders-chevron" aria-hidden="true">›</span>
             </td>
           </tr>
         </TransitionGroup>

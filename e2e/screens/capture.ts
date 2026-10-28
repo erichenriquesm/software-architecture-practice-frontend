@@ -15,6 +15,9 @@ for (const [label, viewport] of [['desktop', { width: 1440, height: 900 }], ['ph
   await page.getByLabel('Senha', { exact: true }).focus();
   await page.waitForTimeout(400);
   await page.screenshot({ path: `${out}/${label}-entrar-foco.png` });
+  await page.goto(`${base}/entrar?motivo=sessao`);
+  await page.waitForTimeout(1500);
+  await page.screenshot({ path: `${out}/${label}-entrar-sessao.png` });
   await page.goto(`${base}/cadastro`);
   await page.waitForTimeout(1500);
   await page.screenshot({ path: `${out}/${label}-cadastro.png`, fullPage: true });
@@ -48,6 +51,16 @@ for (const [label, viewport] of [['desktop', { width: 1440, height: 900 }], ['ph
   }
   await page.goto(`${base}/ordens`);
   await page.waitForTimeout(2000);
+  const cancel = page.getByRole('button', { name: /^Cancelar ordem de/ }).first();
+  if (await cancel.isVisible()) {
+    await cancel.click();
+    await page.waitForTimeout(400);
+    await page.screenshot({ path: `${out}/${label}-ordens-confirmar.png` });
+    await page.keyboard.press('Escape');
+  }
+  await page.getByRole('row').nth(2).hover();
+  await page.waitForTimeout(400);
+  await page.screenshot({ path: `${out}/${label}-ordens-hover.png` });
   const firstOrder = page.locator('a[href^="/ordens/"]').first();
   await firstOrder.click();
   await page.waitForTimeout(2000);

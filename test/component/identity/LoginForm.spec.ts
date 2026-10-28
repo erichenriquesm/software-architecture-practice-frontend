@@ -56,4 +56,19 @@ describe('Login form', () => {
 
     expect(screen.getByText('Informe seu e-mail.')).toBeTruthy();
   });
+  test('Should say the session ended when the app sent the user back here', async () => {
+    await renderWithApp(LoginForm, { props: { sessionEnded: true } });
+
+    expect(screen.getByRole('status').textContent).toContain('Sua sessão terminou. Entre de novo para continuar.');
+    expect(screen.queryByRole('alert')).toBeNull();
+  });
+
+  test('Should not mention the session on a plain visit, nor call an empty field a mistake on blur', async () => {
+    await renderWithApp(LoginForm);
+
+    await fireEvent.blur(screen.getByLabelText('E-mail'));
+
+    expect(screen.queryByText(/Sua sessão terminou/)).toBeNull();
+    expect(screen.queryByText('Informe seu e-mail.')).toBeNull();
+  });
 });

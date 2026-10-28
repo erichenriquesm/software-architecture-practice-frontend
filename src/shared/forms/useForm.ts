@@ -1,6 +1,8 @@
 import { computed, reactive, ref } from 'vue';
 import type { z } from 'zod';
 
+const hasContent = (value: unknown): boolean => typeof value === 'string' && value.trim() !== '';
+
 export interface UseFormOutput<TValues extends Record<string, string>, TParsed> {
   readonly values: TValues;
   readonly errors: Readonly<Partial<Record<keyof TValues, string>>>;
@@ -13,7 +15,10 @@ export interface UseFormOutput<TValues extends Record<string, string>, TParsed> 
   reset(next?: Partial<TValues>): void;
 }
 
-/** Form state for a Zod schema: errors show after a field is touched (blur) or after a submit attempt. */
+/**
+ * Form state for a Zod schema. A field's error shows after a submit attempt, or after the field is touched (blur)
+ * while it has content: leaving a field empty is not a mistake yet, so "required" waits for the submit.
+ */
 export const useForm = <TValues extends Record<string, string>, TParsed>(schema: z.ZodType<TParsed, TValues>, initial: TValues): UseFormOutput<TValues, TParsed> => {
   const values = reactive({ ...initial }) as TValues;
   const touched = reactive(new Set()) as Set<keyof TValues>;
@@ -33,7 +38,7 @@ export const useForm = <TValues extends Record<string, string>, TParsed>(schema:
   const errors = computed(() => {
     const visible: Partial<Record<keyof TValues, string>> = {};
     for (const [field, message] of issues.value) {
-      if (submitted.value || touched.has(field)) visible[field] = message;
+      if (submitted.value || (touched.has(field) && hasContent(values[field]))) visible[field] = message;
     }
     return visible;
   });

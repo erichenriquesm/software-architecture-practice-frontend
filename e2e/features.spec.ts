@@ -123,7 +123,9 @@ test.describe('Trading', () => {
 
     await buyer.getByRole('link', { name: 'Ordens', exact: true }).click();
     await buyer.getByRole('button', { name: /Executadas/ }).click();
-    await buyer.locator('a[href^="/ordens/"]').first().click();
+    // The whole row opens the order: a click in the middle of the row, away from the time link
+    await buyer.getByRole('row').nth(1).click();
+    await expect(buyer).toHaveURL(/\/ordens\/[0-9a-f-]{36}$/);
     await expect(buyer.getByText('Executada').first()).toBeVisible();
     await expect(buyer.getByText(/100\s*%/).first()).toBeVisible();
   });
@@ -136,6 +138,7 @@ test.describe('Trading', () => {
     await page.getByRole('link', { name: 'Ordens', exact: true }).click();
     await page.getByRole('button', { name: /Abertas/ }).click();
     await page.getByRole('button', { name: /Cancelar ordem de compra/ }).first().click();
+    await page.getByRole('button', { name: 'Sim, cancelar', exact: true }).click();
     await page.getByRole('button', { name: /Canceladas/ }).click();
     await expect(page.getByText('Cancelada').first()).toBeVisible();
   });
