@@ -130,8 +130,8 @@ describe('Order ticket', () => {
     expect((await screen.findByRole('alert')).textContent).toContain('A ordem foi rejeitada por saldo insuficiente.');
   });
 
-  test('Should show the backend message above the form when the order is refused', async () => {
-    server.use(http.post('/place_order', () => HttpResponse.json({ error: 'invalidOrderData', message: 'price: must be a multiple of 0.01' }, { status: 422 })));
+  test('Should explain in Portuguese, above the form, why the order was refused', async () => {
+    server.use(http.post('/place_order', () => HttpResponse.json({ error: 'invalidOrderData', message: 'price: must be a multiple of the tick 0.01' }, { status: 422 })));
     await renderTicket();
     await fillOrder('83000,00', '0,5');
 
@@ -140,7 +140,8 @@ describe('Order ticket', () => {
 
     const alert = await screen.findByRole('alert');
     expect(alert.textContent).toContain('A ordem não foi aceita.');
-    expect(alert.textContent).toContain('price: must be a multiple of 0.01');
+    expect(alert.textContent).toContain('O preço precisa ser múltiplo de 0,01');
+    expect(alert.textContent).not.toContain('must be');
   });
 
   test('Should retry a 429 with the same key, then count down and disable sending', async () => {

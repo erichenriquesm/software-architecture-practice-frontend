@@ -4,10 +4,14 @@ export const decimalPattern = /^\d+(\.\d+)?$/;
 
 export const decimalPlaces = (value: string): number => value.split('.')[1]?.length ?? 0;
 
-/** The user types "1.234,56" or "1234.56"; the API wants "1234.56". */
+/** Brazilian thousands grouping without a comma: "1.000", "12.500.000" (a leading zero means a decimal, as in "0.001"). */
+const thousandsOnly = /^[1-9]\d{0,2}(\.\d{3})+$/;
+
+/** The user types "1.234,56", "1.000" or "0.5"; the API wants "1234.56", "1000" and "0.5". */
 export const normalizeTypedDecimal = (typed: string): string => {
   const trimmed = typed.trim().replace(/\s/g, '');
   if (trimmed.includes(',')) return trimmed.replace(/\./g, '').replace(',', '.');
+  if (thousandsOnly.test(trimmed)) return trimmed.replace(/\./g, '');
   return trimmed;
 };
 

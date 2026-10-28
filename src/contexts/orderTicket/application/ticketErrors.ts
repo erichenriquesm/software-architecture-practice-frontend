@@ -1,5 +1,6 @@
 import type { ApiErrorKind } from '@/shared/api/apiError';
 import { isApiError } from '@/shared/api/apiError';
+import { backendReasonText } from './backendReason';
 
 export interface TicketErrorMessage {
   readonly title: string;
@@ -8,7 +9,11 @@ export interface TicketErrorMessage {
 
 const fallback: TicketErrorMessage = { title: 'Algo deu errado ao enviar a ordem.', detail: 'Confira em Ordens se ela entrou antes de tentar de novo.' };
 
-const rejected = (backendMessage: string): TicketErrorMessage => ({ title: 'A ordem não foi aceita.', detail: `${backendMessage ? `${backendMessage}. ` : ''}Confira o preço e a quantidade e tente de novo.` });
+/** The backend's own words are English and technical: show a translation, never the raw text. */
+const rejected = (backendMessage: string): TicketErrorMessage => ({
+  title: 'A ordem não foi aceita.',
+  detail: backendReasonText(backendMessage) ?? 'Confira o preço e a quantidade e tente de novo.',
+});
 
 /** 429 is not here: it becomes a countdown (rateLimitMessage) because its text changes every second. */
 const messages: Readonly<Partial<Record<ApiErrorKind, (backendMessage: string) => TicketErrorMessage>>> = {

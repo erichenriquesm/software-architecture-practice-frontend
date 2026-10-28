@@ -12,10 +12,6 @@
 .ticket-title-row { display: flex; align-items: center; min-width: 0; }
 /* An amount field's label lives inside the field, where a button would break the click: the "?" sits over the box, right after
    the label, measured by an invisible copy of the label text */
-.ticket-field-with-help { position: relative; }
-.ticket-field-help { position: absolute; top: 7px; left: 15px; display: inline-flex; align-items: center; height: 20px; font: 500 12px/14px var(--font-sans); pointer-events: none; }
-.ticket-field-help-ghost { visibility: hidden; white-space: nowrap; }
-.ticket-field-help .lt-help { pointer-events: auto; }
 .ticket-form { display: grid; gap: var(--ticket-gap); }
 .ticket-sides { width: 100%; min-width: 0; }
 

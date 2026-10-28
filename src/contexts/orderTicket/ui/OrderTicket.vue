@@ -86,15 +86,14 @@ watch(step, async (current, previous) => {
       <LtSideToggle v-model="side" class="ticket-sides" :disabled="pending" />
 
       <div class="ticket-price-group">
-        <div ref="priceBox" class="ticket-price ticket-field-with-help">
-          <LtAmountField id="ticket-price" v-model="form.values.price" label="Preço limite" :asset="props.market.quote" placeholder="0,00" :error="form.errors.price" @blur="form.touch('price')" />
-          <span class="ticket-field-help">
-            <span class="ticket-field-help-ghost" aria-hidden="true">Preço limite</span>
-            <LtHelp
-              title="Preço limite"
-              :text="`Comprando: o máximo que você paga por 1 ${props.market.base}. Vendendo: o mínimo que aceita. Se já houver alguém no livro com preço melhor, você negocia no preço dessa pessoa.`"
-            />
-          </span>
+        <div ref="priceBox" class="ticket-price">
+          <LtAmountField
+            id="ticket-price"
+            v-model="form.values.price"
+            label="Preço limite"
+            :help-text="`Comprando: o máximo que você paga por 1 ${props.market.base}. Vendendo: o mínimo que aceita. Se já houver alguém no livro com preço melhor, você negocia no preço dessa pessoa.`"
+            :asset="props.market.quote" placeholder="0,00" :error="form.errors.price" @blur="form.touch('price')"
+          />
         </div>
         <p v-if="bestLabel && best" class="ticket-best">
           <span class="lt-num">{{ bestLabel }}</span>
@@ -103,16 +102,13 @@ watch(step, async (current, previous) => {
       </div>
 
       <div class="ticket-quantity-group">
-        <div class="ticket-field-with-help">
-          <LtAmountField id="ticket-quantity" v-model="form.values.quantity" label="Quantidade" :asset="props.market.base" placeholder="0,00000000" :hint="quantityHint" :error="form.errors.quantity" @blur="form.touch('quantity')" />
-          <span class="ticket-field-help">
-            <span class="ticket-field-help-ghost" aria-hidden="true">Quantidade</span>
-            <LtHelp
-              title="Quantidade"
-              :text="`Quantos ${props.market.base} você quer comprar ou vender. Os botões de porcentagem preenchem com uma parte do seu saldo disponível.`"
-            />
-          </span>
-        </div>
+        <LtAmountField
+          id="ticket-quantity"
+          v-model="form.values.quantity"
+          label="Quantidade"
+          :help-text="`Quantos ${props.market.base} você quer comprar ou vender. Os botões de porcentagem preenchem com uma parte do seu saldo disponível.`"
+          :asset="props.market.base" placeholder="0,00000000" :hint="quantityHint" :error="form.errors.quantity" @blur="form.touch('quantity')"
+        />
         <div class="ticket-shares" role="group" aria-label="Preencher com parte do disponível">
           <button
             v-for="share in shares"

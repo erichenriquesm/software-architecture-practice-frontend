@@ -100,7 +100,7 @@ describe('Order ticket use case', () => {
     const { ticket, placed } = await mountTicket(api);
 
     send(ticket, '83000,00', '0,5');
-    await waitFor(() => expect(ticket.errorMessage.value?.detail).toBe('price: must be a positive decimal string. Confira o preço e a quantidade e tente de novo.'));
+    await waitFor(() => expect(ticket.errorMessage.value?.detail).toBe('Informe um preço maior que zero, com no máximo 2 casas decimais.'));
     send(ticket, '83000,00', '0,5');
     await waitFor(() => expect(placed).toEqual(['order-2']));
 

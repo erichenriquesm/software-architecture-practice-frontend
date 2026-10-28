@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { computed } from 'vue';
+import LtHelp from './LtHelp.vue';
 
 const props = withDefaults(
-  defineProps<{ id: string; label: string; asset?: string | undefined; hint?: string | undefined; error?: string | undefined; placeholder?: string | undefined; disabled?: boolean }>(),
+  defineProps<{ id: string; label: string; helpTitle?: string | undefined; helpText?: string | undefined; asset?: string | undefined; hint?: string | undefined; error?: string | undefined; placeholder?: string | undefined; disabled?: boolean }>(),
   { placeholder: '0,00', disabled: false },
 );
 const value = defineModel<string>({ required: true });
@@ -13,7 +14,10 @@ const message = computed(() => props.error ?? props.hint);
 <template>
   <div :class="['lt-field', { 'has-error': props.error, 'is-disabled': props.disabled }]">
     <div class="lt-field-box">
-      <label class="lt-field-label" :for="props.id">{{ props.label }}</label>
+      <div class="lt-field-head">
+        <label class="lt-field-label" :for="props.id">{{ props.label }}</label>
+        <LtHelp v-if="props.helpText" :title="props.helpTitle ?? props.label" :text="props.helpText" />
+      </div>
       <div class="lt-field-row">
         <input
           :id="props.id"

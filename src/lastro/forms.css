@@ -48,6 +48,8 @@
 }
 .lt-field-box:hover { background: var(--field-bg-hover); border-color: var(--line-strong); }
 .lt-field-box:focus-within { background: var(--surface); border-color: var(--focus-ring); box-shadow: var(--field-ring); }
+.lt-field-head { display: flex; align-items: center; min-width: 0; }
+.lt-field-head .lt-help { vertical-align: baseline; }
 .lt-field-label { font: 500 12px/14px var(--font-sans); color: var(--ink-muted); cursor: text; }
 .lt-field-box:focus-within .lt-field-label { color: var(--focus-ring); }
 .lt-field-row { display: flex; align-items: center; gap: 10px; min-width: 0; }
@@ -104,11 +106,14 @@
 .lt-field-input:focus, .lt-field-input:focus-visible, .lt-input:focus-visible { outline: none; }
 
 /* Help: a quiet "?" next to a term, and a bubble that explains it */
-.lt-help { display: inline-flex; vertical-align: middle; margin-left: 4px; }
+.lt-help { display: inline-block; vertical-align: -0.3em; margin-left: 0.35em; line-height: 0; }
+/* Sized from the text around it, so it sits on the same line as a tiny eyebrow or a big price; the hit area grows invisibly */
 .lt-help-trigger {
-  display: inline-grid; place-items: center; width: 20px; height: 20px; padding: 0; border: 0; border-radius: 50%;
+  position: relative; display: inline-grid; place-items: center; width: max(1.25em, 14px); height: max(1.25em, 14px); padding: 0; border: 0; border-radius: 50%;
   background: transparent; color: var(--ink-faint); cursor: help; transition: color var(--duration-fast), background-color var(--duration-fast), transform var(--duration-fast) var(--ease-out);
 }
+.lt-help-trigger::before { content: ''; position: absolute; inset: -6px; border-radius: 50%; }
+.lt-help-trigger svg { width: 100%; height: 100%; }
 .lt-help-trigger:hover, .lt-help-trigger[aria-expanded='true'] { color: var(--brass); background: var(--brass-soft); transform: scale(1.08); }
 .lt-help-trigger:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 1px; }
 .lt-help-bubble {
