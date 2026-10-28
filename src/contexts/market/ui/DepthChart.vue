@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, useId, useTemplateRef } from 'vue';
 import type { Market } from '@/entities/market';
-import { decimalsOfAsset, formatDecimal } from '@/lastro';
+import { LtHelp, decimalsOfAsset, formatDecimal } from '@/lastro';
 import { useElementSize } from '../application/useElementSize';
 import { depthChartGeometry, depthPriceAt, depthStepAt } from '../domain/depthChart';
 import type { DepthStep } from '../domain/depthChart';
@@ -65,7 +65,10 @@ const tooltip = computed(() => {
     <header class="market-panel-head">
       <div class="market-panel-titles">
         <p class="lt-eyebrow">Acumulado por preço</p>
-        <h2 id="depth-title" class="lt-panel-title">Profundidade</h2>
+        <div class="market-panel-title-row">
+          <h2 id="depth-title" class="lt-panel-title">Profundidade</h2>
+          <LtHelp title="Profundidade" text="Quanto dá para comprar ou vender a partir do preço atual. Cada degrau soma as ordens daquele preço." placement="bottom" />
+        </div>
       </div>
       <span class="market-legend">
         <span><span class="market-legend-swatch is-bid" aria-hidden="true"></span>Compras</span>

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, useId } from 'vue';
 import type { Market } from '@/entities/market';
-import { decimalsOfAsset, formatDecimal, useFlash } from '@/lastro';
+import { LtHelp, decimalsOfAsset, formatDecimal, useFlash } from '@/lastro';
 import { useNow } from '../application/useNow';
 import { ageOf, secondsSince } from '../domain/age';
 import type { MarketSummary, Trade } from '../domain/marketData';
@@ -60,12 +60,13 @@ const freshness = computed(() => {
           <span v-if="direction" class="market-last-arrow" aria-hidden="true">{{ direction === 'up' ? '▲' : '▼' }}</span>{{ quoteAmount(props.lastPrice) }}<span class="lt-unit">{{ props.market.quote }}</span>
         </span>
         <span class="lt-visually-hidden">Último preço {{ quoteAmount(props.lastPrice) }} {{ props.market.quote }}</span>
+        <LtHelp title="Último preço" text="Preço da negociação mais recente entre um comprador e um vendedor." placement="bottom" />
       </div>
     </div>
 
     <dl class="market-stats">
       <div class="market-stat market-stat-range">
-        <dt class="lt-eyebrow">Faixa 24h</dt>
+        <dt class="lt-eyebrow">Faixa 24h<LtHelp title="Faixa 24h" text="O menor e o maior preço negociados nas últimas 24 horas. O marcador mostra onde está o último preço." placement="bottom" /></dt>
         <dd class="lt-num">
           <span class="market-range-ends">
             <span><span class="lt-visually-hidden">Mínima </span>{{ quoteAmount(props.summary?.min) }}</span>
@@ -77,11 +78,11 @@ const freshness = computed(() => {
         </dd>
       </div>
       <div class="market-stat">
-        <dt class="lt-eyebrow">Volume 24h</dt>
+        <dt class="lt-eyebrow">Volume 24h<LtHelp title="Volume 24h" :text="`Quanto dinheiro (em ${props.market.quote}) trocou de mão nas últimas 24 horas.`" placement="bottom" /></dt>
         <dd class="lt-num">{{ quoteAmount(props.summary?.volume) }} <span class="lt-unit">{{ props.market.quote }}</span></dd>
       </div>
       <div class="market-stat">
-        <dt class="lt-eyebrow">Spread</dt>
+        <dt class="lt-eyebrow">Spread<LtHelp title="Spread" text="A diferença entre a venda mais barata e a compra mais cara no livro. Quanto menor, mais fácil negociar perto do preço justo." placement="bottom" /></dt>
         <dd class="lt-num">{{ quoteAmount(props.summary?.spread) }}</dd>
       </div>
     </dl>

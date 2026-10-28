@@ -19,6 +19,8 @@ describe('Balances panel', () => {
     expect(screen.getByRole('table', { name: 'Carregando saldos' }).getAttribute('aria-busy')).toBe('true');
     expect(await screen.findByText('1,25000000')).toBeTruthy();
     expect(screen.getByText('0,50000000')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'O que é Disponível?' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'O que é Em ordens?' })).toBeTruthy();
   });
 
   test('Should invite a first deposit when the account has no balance', async () => {

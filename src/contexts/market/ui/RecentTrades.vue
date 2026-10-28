@@ -2,7 +2,7 @@
 import { computed, useTemplateRef } from 'vue';
 import type { Market } from '@/entities/market';
 import { sideLabels } from '@/entities/order';
-import { decimalsOfAsset, formatDecimal, useFitCount } from '@/lastro';
+import { LtHelp, decimalsOfAsset, formatDecimal, useFitCount } from '@/lastro';
 import { useNow } from '../application/useNow';
 import { isJustNow } from '../domain/age';
 import type { Trade } from '../domain/marketData';
@@ -25,7 +25,14 @@ const skeletonRows = computed(() => Math.min(8, rows.value + 1));
     <header class="market-panel-head market-trades-head">
       <div class="market-panel-titles">
         <p class="lt-eyebrow">Fita</p>
-        <h2 id="trades-title" class="lt-panel-title">Últimas negociações</h2>
+        <div class="market-panel-title-row">
+          <h2 id="trades-title" class="lt-panel-title">Últimas negociações</h2>
+          <LtHelp
+            title="Últimas negociações"
+            text="Negociações que acabaram de acontecer. 'Compra' quer dizer que quem chegou depois comprou; 'Venda', que vendeu."
+            placement="bottom"
+          />
+        </div>
       </div>
     </header>
     <div ref="body" class="market-trades-body">

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { LtButton } from '@/lastro';
+import { LtButton, LtHelp } from '@/lastro';
 import { inAssetOrder } from '../domain/portfolio';
 import { useBalances } from '../application/useBalances';
 import BalanceRow from './BalanceRow.vue';
@@ -30,8 +30,10 @@ const ordered = computed(() => inAssetOrder(balances.value));
         <thead>
           <tr>
             <th scope="col">Ativo</th>
-            <th scope="col" class="is-num">Disponível</th>
-            <th scope="col" class="is-num">Em ordens</th>
+            <th scope="col" class="is-num">Disponível<LtHelp title="Disponível" text="O que você pode usar agora em ordens ou sacar." placement="bottom" /></th>
+            <th scope="col" class="is-num">
+              Em ordens<LtHelp title="Em ordens" text="Separado para ordens abertas. Não pode ser sacado até a ordem ser executada ou cancelada." placement="bottom" />
+            </th>
             <th scope="col" class="is-num wallet-col-total">Total</th>
             <th scope="col" class="wallet-col-split">Distribuição</th>
           </tr>

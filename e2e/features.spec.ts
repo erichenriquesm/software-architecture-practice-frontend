@@ -32,7 +32,7 @@ const deposit = async (page: Page, assetId: 'USD' | 'BTC', typed: string) => {
   await page.goto('/carteira');
   await page.getByRole('tab', { name: 'Depositar' }).click();
   await page.getByLabel('Ativo').selectOption(assetId);
-  await page.getByLabel('Quantidade').fill(typed);
+  await page.getByLabel('Quantidade', { exact: true }).fill(typed);
   await page.getByRole('button', { name: `Depositar ${assetId}` }).click();
   await expect(page.getByRole('status').filter({ hasText: assetId })).toBeVisible();
 };
@@ -40,8 +40,8 @@ const deposit = async (page: Page, assetId: 'USD' | 'BTC', typed: string) => {
 const placeOrder = async (page: Page, side: 'buy' | 'sell', price: string, quantity: string) => {
   await page.goto('/mercado/BTC-USD');
   await page.getByRole('radio', { name: side === 'buy' ? 'Compra' : 'Venda', exact: true }).click();
-  await page.getByLabel('Preço limite').fill(price.replace('.', ','));
-  await page.getByLabel('Quantidade').fill(quantity);
+  await page.getByLabel('Preço limite', { exact: true }).fill(price.replace('.', ','));
+  await page.getByLabel('Quantidade', { exact: true }).fill(quantity);
   const action = side === 'buy' ? 'Comprar BTC' : 'Vender BTC';
   await page.locator('.ticket-submit, form').getByRole('button', { name: action }).first().click();
   await page.getByRole('dialog').getByRole('button', { name: action }).click();
@@ -115,8 +115,8 @@ test.describe('Trading', () => {
     await buyer.goto('/mercado/BTC-USD');
     await buyer.getByRole('radio', { name: 'Compra', exact: true }).click();
     await buyer.getByRole('button', { name: `Usar o preço ${brl(price)}` }).click();
-    await expect(buyer.getByLabel('Preço limite')).toHaveValue(new RegExp(brl(price).replace('.', '\\.')));
-    await buyer.getByLabel('Quantidade').fill('0,001');
+    await expect(buyer.getByLabel('Preço limite', { exact: true })).toHaveValue(new RegExp(brl(price).replace('.', '\\.')));
+    await buyer.getByLabel('Quantidade', { exact: true }).fill('0,001');
     await buyer.locator('form').getByRole('button', { name: 'Comprar BTC' }).first().click();
     await buyer.getByRole('dialog').getByRole('button', { name: 'Comprar BTC' }).click();
     await expect(buyer.getByText('Sua ordem entrou no livro.')).toBeVisible();
@@ -145,11 +145,11 @@ test.describe('Trading', () => {
     await page.goto('/carteira');
     await page.getByRole('tab', { name: 'Sacar' }).click();
     await page.getByLabel('Ativo').selectOption('USD');
-    await page.getByLabel('Quantidade').fill('999999999');
+    await page.getByLabel('Quantidade', { exact: true }).fill('999999999');
     await page.getByRole('button', { name: 'Sacar USD' }).click();
     await expect(page.getByText(/disponível/i).first()).toBeVisible();
 
-    await page.getByLabel('Quantidade').fill('1,00');
+    await page.getByLabel('Quantidade', { exact: true }).fill('1,00');
     await page.getByRole('button', { name: 'Sacar USD' }).click();
     await expect(page.getByRole('status').filter({ hasText: '1,00' })).toBeVisible();
   });

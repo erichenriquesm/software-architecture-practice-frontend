@@ -2,7 +2,7 @@
 import { computed, nextTick, ref, watch } from 'vue';
 import { assets } from '@/entities/market';
 import { decimalPlaces, normalizeTypedDecimal } from '@/entities/decimal';
-import { LtAlert, LtAmountField, LtButton, decimalsOfAsset, formatDecimal } from '@/lastro';
+import { LtAlert, LtAmountField, LtButton, LtHelp, decimalsOfAsset, formatDecimal } from '@/lastro';
 import { movementKinds } from '../domain/movement';
 import type { MovementKind } from '../domain/movement';
 import { changeDirection, isSameAmount, quickAmounts } from '../domain/portfolio';
@@ -13,6 +13,10 @@ const props = defineProps<{ accountId?: string | undefined }>();
 const { kind, selectKind, form, submit, pending, done, available, errorMessage } = useMovement(() => props.accountId);
 
 const tabLabels: Readonly<Record<MovementKind, string>> = { deposit: 'Depositar', withdraw: 'Sacar' };
+const helps: Readonly<Record<MovementKind, { title: string; text: string }>> = {
+  deposit: { title: 'Depósito', text: 'Neste ambiente de teste o depósito é simulado: o valor entra na hora e nenhum dinheiro de verdade é movido.' },
+  withdraw: { title: 'Saque', text: 'Retira do saldo disponível. O que está em ordens abertas não pode ser sacado.' },
+};
 const tabRefs = ref<HTMLButtonElement[]>([]);
 const decimals = computed(() => decimalsOfAsset(form.values.assetId));
 const submitLabel = computed(() => `${tabLabels[kind.value]} ${form.values.assetId}`);
@@ -73,7 +77,10 @@ defineExpose({ startDeposit });
 <template>
   <aside aria-labelledby="movement-title" class="wallet-movement lt-panel lt-rise lt-rise-2">
     <div class="wallet-section-head">
-      <h2 id="movement-title" class="lt-panel-title">Movimentar</h2>
+      <div class="wallet-title-row">
+        <h2 id="movement-title" class="lt-panel-title">Movimentar</h2>
+        <LtHelp :title="helps[kind].title" :text="helps[kind].text" placement="bottom" />
+      </div>
       <span class="wallet-available">
         <span class="lt-muted">disponível</span>
         <span :key="flashKey" :class="['wallet-flash', 'lt-num', flashClass]">{{ formatDecimal(available, decimals) }} {{ form.values.assetId }}</span>

@@ -28,6 +28,7 @@
 .orders-table tbody tr { border-top: 1px solid var(--line); }
 .orders-table .is-num { text-align: right; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 .orders-table thead .is-num { font-family: var(--font-sans); }
+.orders-filter-phone { flex: none; display: inline-flex; align-items: center; }
 .orders-table .is-muted, .orders-table .is-muted a { color: var(--ink-muted); }
 .orders-row { position: relative; transition: background-color var(--duration-fast); }
 .orders-row:hover, .orders-row:focus-within { background: color-mix(in srgb, var(--surface-raised) 70%, transparent); }
@@ -106,6 +107,7 @@
 .order-grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(280px, 1fr); gap: clamp(12px, 2.4vh, 24px); align-items: start; }
 .order-card { padding: clamp(12px, 2vh, 16px) 20px; display: grid; gap: clamp(10px, 2vh, 16px); }
 .order-card h2, .order-receipt h2 { margin: 0; }
+.order-card-head { display: flex; align-items: center; min-width: 0; }
 
 /* Stepper */
 .order-steps { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
@@ -204,7 +206,7 @@
 }
 
 /* Phones: four dots with the current step named under them, a small ring beside the numbers, a condensed receipt */
-.order-detail.is-phone .order-step-text, .order-detail.is-phone .order-card > h2, .order-detail.is-phone .order-receipt > h2 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.order-detail.is-phone .order-step-text, .order-detail.is-phone .order-card > .order-card-head, .order-detail.is-phone .order-receipt > h2 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .order-detail.is-phone { gap: 10px; }
 .order-detail.is-phone .order-header { flex-wrap: nowrap; align-items: center; gap: var(--space-3); }
 .order-detail.is-phone .order-heading { gap: 2px; }

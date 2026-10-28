@@ -2,6 +2,8 @@
 .market-panel-head { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap; }
 .market-panel-titles { display: grid; gap: 2px; min-width: 0; }
 .market-panel-titles .lt-eyebrow { margin: 0; font-size: 10px; line-height: 12px; }
+.market-panel-title-row { display: flex; align-items: center; min-width: 0; }
+.market-panel-title-row > h2 { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .market-empty-detail { margin: 0; font-size: 13px; }
 
 /* Ticker strip */
@@ -103,6 +105,7 @@
 .market-book-tools { min-width: 0; }
 .market-book-tools { display: flex; align-items: center; gap: var(--space-3); }
 
+.market-views-wrap { display: inline-flex; align-items: center; }
 .market-views { display: inline-flex; gap: 2px; padding: 2px; border-radius: var(--radius-md); background: var(--surface-raised); }
 .market-view { display: inline-grid; place-items: center; width: 26px; height: 24px; padding: 0; border: 0; border-radius: var(--radius-sm); background: transparent; cursor: pointer; opacity: .55; transition: opacity var(--duration-fast), background-color var(--duration-fast); }
 .market-view:hover { opacity: .85; }
@@ -225,9 +228,12 @@
 
 /* Behind the tabs the tab names the panel: titles stay for screen readers only, the tools keep their row */
 @media (max-width: 900px) {
-  .market-book .market-panel-titles, .market-trades-head, .market-depth .market-panel-titles {
+  .market-book .market-panel-titles > .lt-eyebrow, .market-book .market-panel-title-row > h2, .market-trades-head,
+  .market-depth .market-panel-titles > .lt-eyebrow, .market-depth .market-panel-title-row > h2 {
     position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
   }
+  /* The titles go, their "?" stays at the start of the tools row; the tape's and the sides' helps give way */
+  .market-trades-head .lt-help, .market-views-help { display: none; }
   .market-book { padding-top: var(--space-3); }
   .market-book .lt-book-readout { font-size: 11px; }
 }

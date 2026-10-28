@@ -23,6 +23,7 @@ describe('Order detail', () => {
     expect(screen.getByRole('progressbar', { name: 'Execução da ordem' }).getAttribute('aria-valuenow')).toBe('50');
     expect(screen.getByText('5,00000000 de 10,00000000 BTC · 50%')).toBeTruthy();
     expect(screen.getByText('415.000,00 USD')).toBeTruthy();
+    for (const term of ['Andamento', 'Executado', 'Preço médio', 'Restante']) expect(screen.getByRole('button', { name: `O que é ${term}?` })).toBeTruthy();
 
     await fireEvent.click(screen.getByRole('button', { name: 'Cancelar o restante' }));
     expect(screen.getByRole('dialog', { name: 'Cancelar o que falta executar?' })).toBeTruthy();

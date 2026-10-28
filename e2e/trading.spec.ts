@@ -15,7 +15,7 @@ test('Should sign in, see the market, deposit, find the orders and sign out', as
 
   const usdRow = page.getByRole('row', { name: /^USD/ });
   await expect(usdRow).toBeVisible();
-  await page.getByLabel('Quantidade').fill('1,25');
+  await page.getByLabel('Quantidade', { exact: true }).fill('1,25');
   await page.getByRole('button', { name: 'Depositar USD' }).click();
   await expect(page.getByRole('status').filter({ hasText: /1,25/ })).toBeVisible();
 

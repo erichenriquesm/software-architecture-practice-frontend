@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed, ref, useTemplateRef } from 'vue';
+import { computed, ref, useId, useTemplateRef } from 'vue';
 import type { Market } from '@/entities/market';
-import { LtOrderBook, formatDecimal, useFitCount } from '@/lastro';
+import { LtHelp, LtOrderBook, formatDecimal, useFitCount } from '@/lastro';
 import { depthPrecisions } from '../domain/depth';
 import { levelsThatFit } from '../domain/fit';
 import type { BookView } from '../domain/fit';
@@ -24,6 +24,7 @@ const views: ReadonlyArray<{ value: BookView; label: string }> = [
   { value: 'asks', label: 'Só vendas' },
 ];
 const view = ref<BookView>('both');
+const precisionId = useId();
 
 /** Rows of 24 px; the column head, the last price strip and the readout below take the rest (heights fixed in market.css). */
 const rowHeight = 24;
@@ -56,34 +57,49 @@ const moveView = (event: KeyboardEvent) => {
     <header class="market-panel-head">
       <div class="market-panel-titles">
         <p class="lt-eyebrow">{{ props.market.marketId }}</p>
-        <h2 id="book-title" class="lt-panel-title">Livro de ofertas</h2>
+        <div class="market-panel-title-row">
+          <h2 id="book-title" class="lt-panel-title">Livro de ofertas</h2>
+          <LtHelp
+            title="Livro de ofertas"
+            text="Lista das ordens esperando para ser executadas. Em laranja, quem quer vender; em azul, quem quer comprar. As barras mostram a quantidade em cada preço. Clique num preço para usá-lo na sua ordem."
+            placement="bottom"
+          />
+        </div>
       </div>
       <div class="market-book-tools">
-        <div class="market-views" role="radiogroup" aria-label="Lados do livro" @keydown="moveView">
-          <button
-            v-for="option in views"
-            :key="option.value"
-            type="button"
-            role="radio"
-            :data-view="option.value"
-            :aria-checked="view === option.value"
-            :aria-label="option.label"
-            :title="option.label"
-            :tabindex="view === option.value ? 0 : -1"
-            :class="['market-view', `is-${option.value}`, { 'is-active': view === option.value }]"
-            @click="view = option.value"
-          >
-            <span class="market-view-icon" aria-hidden="true"><i></i><i></i><i></i></span>
-          </button>
+        <div class="market-views-wrap">
+          <div class="market-views" role="radiogroup" aria-label="Lados do livro" @keydown="moveView">
+            <button
+              v-for="option in views"
+              :key="option.value"
+              type="button"
+              role="radio"
+              :data-view="option.value"
+              :aria-checked="view === option.value"
+              :aria-label="option.label"
+              :title="option.label"
+              :tabindex="view === option.value ? 0 : -1"
+              :class="['market-view', `is-${option.value}`, { 'is-active': view === option.value }]"
+              @click="view = option.value"
+            >
+              <span class="market-view-icon" aria-hidden="true"><i></i><i></i><i></i></span>
+            </button>
+          </div>
+          <LtHelp class="market-views-help" title="Lados do livro" text="Mostrar os dois lados, só compras ou só vendas." placement="bottom" />
         </div>
-        <label class="market-precision">
-          <span>Agrupar</span>
+        <div class="market-precision">
+          <label :for="precisionId">Agrupar</label>
+          <LtHelp
+            title="Agrupar"
+            text="Junta os preços próximos numa faixa só, para ver o livro de longe. 100 junta tudo que estiver na mesma centena."
+            placement="bottom"
+          />
           <span class="market-select-box">
-            <select v-model.number="precision" class="market-select">
+            <select :id="precisionId" v-model.number="precision" class="market-select">
               <option v-for="option in depthPrecisions" :key="option.value" :value="option.value">{{ stepLabel(option.step) }}</option>
             </select>
           </span>
-        </label>
+        </div>
       </div>
     </header>
     <div ref="body" class="market-book-body">

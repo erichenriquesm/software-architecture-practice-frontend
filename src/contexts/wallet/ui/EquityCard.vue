@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { LtButton, formatDecimal, useFlash } from '@/lastro';
+import { LtButton, LtHelp, formatDecimal, useFlash } from '@/lastro';
 import { estimateEquity } from '../domain/portfolio';
 import { useBalances } from '../application/useBalances';
 import { useReferencePrice } from '../application/useReferencePrice';
@@ -27,6 +27,11 @@ const empty = computed(() => equity.value !== undefined && equity.value.totalUsd
     <div class="wallet-equity-glow" aria-hidden="true"></div>
     <div class="wallet-equity-head">
       <h2 id="equity-title" class="lt-eyebrow">Patrimônio estimado</h2>
+      <LtHelp
+        title="Patrimônio estimado"
+        text="Seu USD mais seus BTC convertidos pelo último preço negociado. É uma estimativa: o valor real depende do preço na hora de vender."
+        placement="bottom"
+      />
       <span class="wallet-equity-tag">estimado</span>
     </div>
 

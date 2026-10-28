@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import { sideLabels } from '@/entities/order';
-import { LtAlert, LtButton, LtStatusBadge, useFitCount, useMediaQuery } from '@/lastro';
+import { LtAlert, LtButton, LtHelp, LtStatusBadge, useFitCount, useMediaQuery } from '@/lastro';
 import { canCancel, fillPercentage, isLive, orderFilterLabels, orderFilters } from '../domain/order';
 import type { Order, OrderFilter } from '../domain/order';
 import { pageRangeLabel, pageWindow } from '../domain/pagination';
@@ -30,6 +30,8 @@ const tableRowPx = 45;
 const tableHeadPx = 28;
 const cardPx = 105;
 const phone = useMediaQuery('(max-width: 760px)');
+const statusHelp =
+  'Recebida: chegou e está reservando o saldo. Aberta: está no livro esperando. Parcial: parte já foi executada. Cancelando: saindo do livro. Executada: concluída. Cancelada, Rejeitada (por exemplo, sem saldo) e Expirada: encerradas sem completar.';
 const body = ref<HTMLElement>();
 const rowsThatFit = useFitCount(body, tableRowPx, { reservedPx: tableHeadPx });
 const cardsThatFit = useFitCount(body, cardPx);
@@ -51,9 +53,12 @@ const goTo = (page: number) => {
   <section aria-labelledby="orders-title" :class="['orders-panel', 'lt-panel', 'lt-rise', { 'is-phone': phone }]">
     <div class="orders-toolbar">
       <h2 id="orders-title" class="lt-panel-title">Minhas ordens</h2>
-      <select v-if="phone" v-model="filter" class="lt-select orders-filter-select" aria-label="Filtrar por status">
-        <option v-for="option in orderFilters" :key="option" :value="option">{{ shortFilterLabels[option] }}{{ isLoading ? '' : ` (${counts[option]})` }}</option>
-      </select>
+      <span v-if="phone" class="orders-filter-phone">
+        <select v-model="filter" class="lt-select orders-filter-select" aria-label="Filtrar por status">
+          <option v-for="option in orderFilters" :key="option" :value="option">{{ shortFilterLabels[option] }}{{ isLoading ? '' : ` (${counts[option]})` }}</option>
+        </select>
+        <LtHelp title="Status" :text="statusHelp" placement="bottom" />
+      </span>
       <div v-else role="group" aria-label="Filtrar por status" class="orders-filters">
         <button
           v-for="option in orderFilters"
@@ -87,9 +92,11 @@ const goTo = (page: number) => {
             <th scope="col">Operação</th>
             <th scope="col" class="is-num">Preço limite</th>
             <th scope="col" class="is-num">Quantidade</th>
-            <th scope="col" class="is-num">Executado</th>
-            <th scope="col" class="is-num orders-cell-avg">Preço médio</th>
-            <th scope="col">Status</th>
+            <th scope="col" class="is-num">Executado<LtHelp v-if="!phone" title="Executado" text="Quanto da quantidade da ordem já foi negociado." placement="bottom" /></th>
+            <th scope="col" class="is-num orders-cell-avg">
+              Preço médio<LtHelp v-if="!phone" title="Preço médio" text="O preço médio pago ou recebido nas partes executadas. Pode ser melhor que o seu limite." placement="bottom" />
+            </th>
+            <th scope="col">Status<LtHelp v-if="!phone" title="Status" :text="statusHelp" placement="bottom" /></th>
             <th scope="col" class="is-num"><span class="lt-visually-hidden">Ações</span></th>
           </tr>
         </thead>

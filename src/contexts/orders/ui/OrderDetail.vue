@@ -2,7 +2,7 @@
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
 import { sideLabels } from '@/entities/order';
 import { decimalPlaces } from '@/entities/decimal';
-import { LtAlert, LtButton, LtStatusBadge, formatDecimal, useMediaQuery } from '@/lastro';
+import { LtAlert, LtButton, LtHelp, LtStatusBadge, formatDecimal, useMediaQuery } from '@/lastro';
 import { canCancel, fillPercentage, filledValue, isLive, orderNotional, orderSteps, remainingQuantity, statusReasonText, withoutTrailingZeros } from '../domain/order';
 import { useCancelOrder } from '../application/useCancelOrder';
 import { useOrder } from '../application/useOrders';
@@ -147,7 +147,10 @@ const confirmCancel = (orderId: string) => {
       </TransitionGroup>
 
       <section aria-labelledby="order-steps-title" class="order-card lt-panel lt-rise lt-rise-1">
-        <h2 id="order-steps-title" class="lt-eyebrow">Andamento</h2>
+        <div class="order-card-head">
+          <h2 id="order-steps-title" class="lt-eyebrow">Andamento</h2>
+          <LtHelp v-if="!phone" title="Andamento" text="As etapas da sua ordem: recebida, saldo reservado, no livro e o resultado." placement="bottom" />
+        </div>
         <OrderSteps :steps="view.steps" />
       </section>
 
@@ -156,13 +159,16 @@ const confirmCancel = (orderId: string) => {
           <FillRing :percentage="view.percentage" :tone="view.ringTone" />
           <div class="order-execution-body">
             <div class="order-execution-head">
-              <span class="lt-eyebrow">Executado</span>
+              <span class="lt-eyebrow">Executado<LtHelp title="Executado" text="Quanto da quantidade da ordem já foi negociado." /></span>
               <span class="lt-num order-execution-amount">{{ view.executed }} · {{ view.percentage }}%</span>
             </div>
             <dl class="order-facts">
-              <div><dt class="lt-eyebrow">Preço médio</dt><dd class="lt-num">{{ view.averagePrice }}</dd></div>
+              <div>
+                <dt class="lt-eyebrow">Preço médio<LtHelp title="Preço médio" text="O preço médio pago ou recebido nas partes executadas. Pode ser melhor que o seu limite." /></dt>
+                <dd class="lt-num">{{ view.averagePrice }}</dd>
+              </div>
               <div><dt class="lt-eyebrow">{{ view.valueLabel }}</dt><dd class="lt-num">{{ view.value }}</dd></div>
-              <div><dt class="lt-eyebrow">Restante</dt><dd class="lt-num">{{ view.remaining }}</dd></div>
+              <div><dt class="lt-eyebrow">Restante<LtHelp title="Restante" text="O que ainda falta executar." /></dt><dd class="lt-num">{{ view.remaining }}</dd></div>
             </dl>
           </div>
         </section>

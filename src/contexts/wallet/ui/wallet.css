@@ -13,6 +13,7 @@
 .wallet-area-balances > .wallet-balances, .wallet-area-movement > .wallet-movement { min-height: 0; overflow: hidden; align-content: start; }
 .wallet-area-tabs { grid-area: tabs; }
 .wallet-section-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2) var(--space-4); }
+.wallet-title-row { display: flex; align-items: center; min-width: 0; }
 
 /* Asset glyph: a coin with its code. USD neutral, BTC in the brand brass. */
 .wallet-glyph { display: inline-grid; place-items: center; flex: none; width: 32px; height: 32px; border-radius: 50%; font: 600 9px/1 var(--font-sans); letter-spacing: .04em; color: var(--ink); background: color-mix(in srgb, var(--ink) 9%, var(--surface)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 22%, transparent); }
@@ -152,7 +153,8 @@
 .wallet-page.is-phone .wallet-equity-cents { font-size: 18px; line-height: 24px; }
 .wallet-page.is-phone .wallet-allocation { padding-top: 4px; }
 .wallet-page.is-phone .wallet-movement > .wallet-section-head .lt-panel-title { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-.wallet-page.is-phone .wallet-movement > .wallet-section-head { justify-content: flex-end; }
+/* The title goes, its "?" stays at the start of the line */
+.wallet-page.is-phone .wallet-movement > .wallet-section-head { justify-content: space-between; }
 .wallet-page.is-phone .wallet-note { display: none; }
 @media (max-width: 640px) {
   .wallet-col-total, .wallet-col-split, .wallet-asset-name { display: none; }

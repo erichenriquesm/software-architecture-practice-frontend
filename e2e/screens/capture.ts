@@ -30,7 +30,7 @@ for (const [label, viewport] of [['desktop', { width: 1440, height: 900 }], ['ph
   }
   await page.goto(`${base}/carteira`);
   await page.waitForTimeout(1500);
-  const amount = page.getByLabel('Quantidade');
+  const amount = page.getByLabel('Quantidade', { exact: true });
   if (await amount.isVisible()) {
     await amount.focus();
     await page.keyboard.type('12,5');
@@ -39,7 +39,7 @@ for (const [label, viewport] of [['desktop', { width: 1440, height: 900 }], ['ph
   }
   await page.goto(`${base}/mercado/BTC-USD`);
   await page.waitForTimeout(2000);
-  const price = page.getByLabel('Preço limite');
+  const price = page.getByLabel('Preço limite', { exact: true });
   if (await price.isVisible()) {
     await price.focus();
     await page.keyboard.press('Tab');

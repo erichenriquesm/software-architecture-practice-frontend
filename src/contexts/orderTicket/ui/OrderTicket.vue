@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, useTemplateRef, watch } from 'vue';
 import type { Market } from '@/entities/market';
-import { LtAlert, LtAmountField, LtButton, LtSideToggle, formatDecimal } from '@/lastro';
+import { LtAlert, LtAmountField, LtButton, LtHelp, LtSideToggle, formatDecimal } from '@/lastro';
 import { useOrderTicket } from '../application/useOrderTicket';
 import { shares } from '../domain/share';
 import { formatAsset, reservationOf } from '../domain/ticket';
@@ -70,7 +70,14 @@ watch(step, async (current, previous) => {
   <aside :class="['lt-panel', 'ticket', `is-${side}`, { 'has-message': errorMessage || placed }]" aria-labelledby="ticket-title">
     <header class="ticket-head">
       <p class="lt-eyebrow">Boleta · {{ props.market.marketId }}</p>
-      <h2 id="ticket-title" class="lt-panel-title">Nova ordem limitada</h2>
+      <div class="ticket-title-row">
+        <h2 id="ticket-title" class="lt-panel-title">Nova ordem limitada</h2>
+        <LtHelp
+          title="Ordem limitada"
+          text="Você escolhe o preço máximo para comprar ou o mínimo para vender. A ordem só é executada nesse preço ou melhor e fica esperando no livro até alguém aceitar."
+          placement="bottom"
+        />
+      </div>
     </header>
 
     <LtAlert v-if="errorMessage" :tone="errorIsWarning ? 'neutral' : 'danger'" :title="errorMessage.title" :detail="errorMessage.detail" />
@@ -79,8 +86,15 @@ watch(step, async (current, previous) => {
       <LtSideToggle v-model="side" class="ticket-sides" :disabled="pending" />
 
       <div class="ticket-price-group">
-        <div ref="priceBox" class="ticket-price">
+        <div ref="priceBox" class="ticket-price ticket-field-with-help">
           <LtAmountField id="ticket-price" v-model="form.values.price" label="Preço limite" :asset="props.market.quote" placeholder="0,00" :error="form.errors.price" @blur="form.touch('price')" />
+          <span class="ticket-field-help">
+            <span class="ticket-field-help-ghost" aria-hidden="true">Preço limite</span>
+            <LtHelp
+              title="Preço limite"
+              :text="`Comprando: o máximo que você paga por 1 ${props.market.base}. Vendendo: o mínimo que aceita. Se já houver alguém no livro com preço melhor, você negocia no preço dessa pessoa.`"
+            />
+          </span>
         </div>
         <p v-if="bestLabel && best" class="ticket-best">
           <span class="lt-num">{{ bestLabel }}</span>
@@ -89,7 +103,16 @@ watch(step, async (current, previous) => {
       </div>
 
       <div class="ticket-quantity-group">
-        <LtAmountField id="ticket-quantity" v-model="form.values.quantity" label="Quantidade" :asset="props.market.base" placeholder="0,00000000" :hint="quantityHint" :error="form.errors.quantity" @blur="form.touch('quantity')" />
+        <div class="ticket-field-with-help">
+          <LtAmountField id="ticket-quantity" v-model="form.values.quantity" label="Quantidade" :asset="props.market.base" placeholder="0,00000000" :hint="quantityHint" :error="form.errors.quantity" @blur="form.touch('quantity')" />
+          <span class="ticket-field-help">
+            <span class="ticket-field-help-ghost" aria-hidden="true">Quantidade</span>
+            <LtHelp
+              title="Quantidade"
+              :text="`Quantos ${props.market.base} você quer comprar ou vender. Os botões de porcentagem preenchem com uma parte do seu saldo disponível.`"
+            />
+          </span>
+        </div>
         <div class="ticket-shares" role="group" aria-label="Preencher com parte do disponível">
           <button
             v-for="share in shares"
@@ -112,11 +135,16 @@ watch(step, async (current, previous) => {
 
       <dl class="ticket-totals">
         <div>
-          <dt>Total</dt>
+          <dt>Total<LtHelp title="Total" text="Quantidade vezes preço limite: o máximo que a ordem pode custar ou render." /></dt>
           <dd class="lt-num">{{ total === undefined ? '–' : formatDecimal(total, quoteDecimals) }} <span class="lt-unit">{{ props.market.quote }}</span></dd>
         </div>
         <div>
-          <dt>Fica reservado</dt>
+          <dt>
+            Fica reservado<LtHelp
+              title="Fica reservado"
+              text="Enquanto a ordem está aberta, esse valor fica separado do seu saldo para garantir o pagamento. Ele volta se você cancelar."
+            />
+          </dt>
           <dd class="lt-num">{{ reservation ? formatAsset(reservation.amount, reservation.assetId) : '–' }}</dd>
         </div>
       </dl>
