@@ -10,6 +10,8 @@ const typeDocument = (typed: string) => {
   form.values.document = maskCpf(typed);
 };
 const satisfied = computed(() => passwordRules.value.filter((rule) => rule.satisfied).length);
+/** On very short screens the checklist folds into one line: the next rule still missing. */
+const nextRule = computed(() => passwordRules.value.find((rule) => !rule.satisfied)?.label);
 </script>
 
 <template>
@@ -51,6 +53,7 @@ const satisfied = computed(() => passwordRules.value.filter((rule) => rule.satis
       <div class="password-meter" :data-level="satisfied" aria-hidden="true">
         <span v-for="segment in passwordRules.length" :key="segment" :class="{ 'is-on': segment <= satisfied }"></span>
       </div>
+      <p :class="['password-next', { 'is-done': !nextRule }]" aria-hidden="true">{{ nextRule ? `Falta: ${nextRule.toLowerCase()}` : 'Senha forte o bastante' }}</p>
       <ul class="password-rules" aria-label="Regras da senha">
         <li v-for="rule in passwordRules" :key="rule.label" :class="{ 'is-satisfied': rule.satisfied }">
           <span class="password-check" aria-hidden="true"></span>

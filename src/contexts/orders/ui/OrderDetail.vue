@@ -2,7 +2,7 @@
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
 import { sideLabels } from '@/entities/order';
 import { decimalPlaces } from '@/entities/decimal';
-import { LtAlert, LtButton, LtStatusBadge, formatDecimal } from '@/lastro';
+import { LtAlert, LtButton, LtStatusBadge, formatDecimal, useMediaQuery } from '@/lastro';
 import { canCancel, fillPercentage, filledValue, isLive, orderNotional, orderSteps, remainingQuantity, statusReasonText, withoutTrailingZeros } from '../domain/order';
 import { useCancelOrder } from '../application/useCancelOrder';
 import { useOrder } from '../application/useOrders';
@@ -14,6 +14,8 @@ const props = defineProps<{ orderId: string }>();
 const emit = defineEmits<{ cancelled: [] }>();
 const { order, isLoading, notFound, error, refetch } = useOrder(() => props.orderId);
 const { cancel, cancellingId, errorMessage } = useCancelOrder({ onCancelled: () => emit('cancelled') });
+/** Phones get a condensed detail (dot stepper, small ring, short receipt) so it fits without scrolling. */
+const phone = useMediaQuery('(max-width: 760px)');
 
 const compact = (value: string) => {
   const trimmed = withoutTrailingZeros(value);
@@ -73,7 +75,7 @@ const confirmCancel = (orderId: string) => {
 </script>
 
 <template>
-  <div class="order-detail">
+  <div :class="['order-detail', { 'is-phone': phone }]">
     <RouterLink to="/ordens" class="order-back"><span aria-hidden="true">←</span> Ordens</RouterLink>
 
     <div v-if="isLoading" class="order-loading" aria-busy="true" aria-label="Carregando ordem">
@@ -116,6 +118,7 @@ const confirmCancel = (orderId: string) => {
           <LtButton
             id="order-cancel-trigger"
             variant="secondary"
+            :size="phone ? 'sm' : 'md'"
             aria-haspopup="dialog"
             :aria-expanded="confirming"
             aria-controls="order-cancel-confirm"
@@ -167,8 +170,8 @@ const confirmCancel = (orderId: string) => {
         <section aria-labelledby="order-receipt-title" class="order-receipt lt-panel lt-rise lt-rise-3">
           <h2 id="order-receipt-title" class="lt-eyebrow">Resumo da ordem</h2>
           <dl class="order-receipt-lines">
-            <div><dt>Mercado</dt><dd>{{ order.marketId }}</dd></div>
-            <div><dt>Operação</dt><dd :class="`orders-side-${order.side}`"><span aria-hidden="true">{{ order.side === 'buy' ? '▲' : '▼' }}</span> {{ sideLabels[order.side] }} limitada</dd></div>
+            <div class="is-market"><dt>Mercado</dt><dd>{{ order.marketId }}</dd></div>
+            <div class="is-operation"><dt>Operação</dt><dd :class="`orders-side-${order.side}`"><span aria-hidden="true">{{ order.side === 'buy' ? '▲' : '▼' }}</span> {{ sideLabels[order.side] }} limitada</dd></div>
             <div><dt>Preço limite</dt><dd class="lt-num">{{ view.price }}</dd></div>
             <div><dt>Quantidade</dt><dd class="lt-num">{{ view.quantity }}</dd></div>
             <div class="is-total"><dt>Total no limite</dt><dd class="lt-num">{{ view.notional }}</dd></div>

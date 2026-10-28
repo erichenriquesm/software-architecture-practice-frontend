@@ -13,7 +13,7 @@ const refreshBalances = () => void queryClient.invalidateQueries({ queryKey: bal
 </script>
 
 <template>
-  <main class="page">
+  <main class="page orders-page">
     <h1 class="lt-page-title">Ordens</h1>
     <OrdersTable :account-id="accountId" @cancelled="refreshBalances" />
   </main>

@@ -3,6 +3,7 @@ import { describe, expect, test } from 'vitest';
 import { DepthChart, MarketHeader, OrderBookPanel, RecentTrades } from '@/contexts/market';
 import { marketOf } from '@/entities/market';
 import { renderWithApp } from '../../support/renderWithApp';
+import { useFakeLayout } from './fitStub';
 
 const market = marketOf('BTC-USD')!;
 const bids = [
@@ -15,6 +16,8 @@ const asks = [
 ];
 
 describe('Order book panel', () => {
+  useFakeLayout(600);
+
   const rowsOf = () => {
     const rows = within(screen.getByRole('table', { name: 'Livro de ofertas' })).getAllByRole('row');
     const cellsOf = (row: HTMLElement) => [...row.querySelectorAll('[role="cell"], [role="columnheader"]')].map((cell) => cell.textContent?.replace(/\s+/g, ' ').trim()).join(' | ');
@@ -65,6 +68,18 @@ describe('Order book panel', () => {
     expect(within(screen.getByLabelText('Agrupar')).getAllByRole('option').map((option) => option.textContent)).toEqual(['0,01', '0,1', '1', '10', '100', '1.000']);
   });
 
+  test('Should show only the levels closest to the spread that fit, never a scrollbar', async () => {
+    const ladder = (from: number, step: number) => Array.from({ length: 40 }, (_, index) => ({ price: (from + step * index).toFixed(2), quantity: '1.00000000' }));
+    // 600 px less the column head, the last price strip and the readout (137 px) is 19 rows of 24 px: 9 asks and 10 bids
+    await renderWithApp(OrderBookPanel, { props: { market, bids: ladder(83000, -10), asks: ladder(83010, 10), precision: 2 } });
+
+    const prices = screen.getAllByRole('button', { name: /^Usar o preço/ }).map((button) => button.textContent?.trim());
+    expect(prices).toHaveLength(19);
+    expect(prices.slice(8, 11)).toEqual(['83.010,00', '83.000,00', '82.990,00']);
+    expect(prices.at(0)).toBe('83.090,00');
+    expect(prices.at(-1)).toBe('82.910,00');
+  });
+
   test('Should show a skeleton while loading and an empty state for an empty book', async () => {
     const loading = await renderWithApp(OrderBookPanel, { props: { market, bids: [], asks: [], precision: 2, loading: true } });
     expect(screen.getByLabelText('Carregando livro de ofertas').getAttribute('aria-busy')).toBe('true');
@@ -86,6 +101,19 @@ describe('Depth chart', () => {
 });
 
 describe('Recent trades', () => {
+  describe('with room for ten rows', () => {
+    useFakeLayout(300);
+
+    test('Should fill the room with the newest trades first', async () => {
+      const trades = Array.from({ length: 30 }, (_, index) => ({ tradeId: `t-${index}`, side: 'buy', price: `${83000 + index}.00`, quantity: '1.00000000', timestamp: '2026-10-28T14:02:41.000Z' }));
+      await renderWithApp(RecentTrades, { props: { market, trades } });
+
+      const rows = screen.getAllByRole('row').slice(1);
+      expect(rows).toHaveLength(10);
+      expect(within(rows[0]!).getAllByRole('cell')[2]?.textContent?.trim()).toBe('83.000,00');
+    });
+  });
+
   test('Should list trades with the side in words, not only color', async () => {
     const trades = [{ tradeId: 't-1', side: 'sell', price: '83000.00', quantity: '5.00000000', timestamp: '2026-10-28T14:02:41.000Z' }];
     await renderWithApp(RecentTrades, { props: { market, trades } });

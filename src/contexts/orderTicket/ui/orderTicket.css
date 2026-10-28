@@ -1,5 +1,6 @@
 /* The ticket takes the colour of the chosen side: a hairline on top, the usage bar and the submit glow follow it */
-.ticket { --side: var(--bid); --side-soft: var(--bid-soft); position: relative; padding: var(--space-4); display: grid; gap: var(--space-4); align-content: start; min-width: 0; overflow: hidden; }
+.ticket { --side: var(--bid); --side-soft: var(--bid-soft); --ticket-gap: var(--space-4); position: relative; padding: var(--space-4); display: flex; flex-direction: column; gap: var(--ticket-gap); min-width: 0; min-height: 0; overflow: hidden; }
+.ticket > * { flex: 0 0 auto; min-width: 0; }
 .ticket.is-sell { --side: var(--ask); --side-soft: var(--ask-soft); }
 .ticket::before {
   content: ''; position: absolute; inset: 0 0 auto; height: 2px;
@@ -8,7 +9,7 @@
 }
 .ticket-head { display: grid; gap: 2px; }
 .ticket-head .lt-eyebrow { margin: 0; }
-.ticket-form { display: grid; gap: var(--space-4); }
+.ticket-form { display: grid; gap: var(--ticket-gap); }
 .ticket-sides { width: 100%; min-width: 0; }
 
 .ticket-price-group, .ticket-quantity-group { display: grid; gap: var(--space-2); }
@@ -96,3 +97,36 @@
 .ticket-side-buy { color: var(--bid); font-weight: 600; }
 .ticket-side-sell { color: var(--ask); font-weight: 600; }
 .ticket-dialog-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: var(--space-2); }
+
+/* The ticket never scrolls: on short screens it tightens, drops the helper text and lets a message take the place of the heading */
+@media (max-height: 800px) {
+  .ticket { --ticket-gap: var(--space-3); padding: var(--space-3) var(--space-4); }
+  .ticket-note { display: none; }
+  .ticket-totals { padding: var(--space-2) var(--space-3); gap: 2px; }
+}
+@media (max-height: 800px), (max-width: 900px) {
+  .ticket.has-message .ticket-head { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .ticket.has-message .ticket-note { display: none; }
+}
+/* Behind the Ordem tab the tab already names the panel: the heading stays for screen readers only */
+@media (max-width: 900px) {
+  .ticket { --ticket-gap: var(--space-2); padding: var(--space-3); }
+  .ticket-head { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .ticket-price-group, .ticket-quantity-group { gap: 6px; }
+  .ticket-note { display: none; }
+  .ticket-totals { padding: var(--space-2) var(--space-3); gap: 2px; font-size: 12px; }
+  .ticket-dialog { gap: var(--space-4); padding: var(--space-4); }
+}
+/* A message on a phone takes the room of the secondary lines: best price, free balance hint, the order summary in the toast */
+@media (max-width: 900px) {
+  .ticket.has-message .ticket-best, .ticket.has-message .ticket-usage, .ticket.has-message .lt-field-hint:not(.lt-field-error) { display: none; }
+  .ticket.has-message { --ticket-gap: 6px; }
+  .ticket.has-message .ticket-totals div + div { display: none; }
+  .ticket .lt-alert { padding: var(--space-2) 10px; }
+  .ticket .lt-alert-detail { line-height: 16px; }
+  .ticket-placed { padding: var(--space-2) var(--space-3); align-items: center; }
+  .ticket-placed-text .lt-muted { display: none; }
+}
+@media (max-width: 900px) and (max-height: 700px) {
+  .ticket-usage { display: none; }
+}

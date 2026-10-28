@@ -67,7 +67,7 @@ watch(step, async (current, previous) => {
 </script>
 
 <template>
-  <aside :class="['lt-panel', 'ticket', `is-${side}`]" aria-labelledby="ticket-title">
+  <aside :class="['lt-panel', 'ticket', `is-${side}`, { 'has-message': errorMessage || placed }]" aria-labelledby="ticket-title">
     <header class="ticket-head">
       <p class="lt-eyebrow">Boleta · {{ props.market.marketId }}</p>
       <h2 id="ticket-title" class="lt-panel-title">Nova ordem limitada</h2>

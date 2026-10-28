@@ -6,7 +6,7 @@
 
 /* Ticker strip */
 .market-header {
-  position: relative; display: grid; align-items: center; gap: var(--space-4) var(--space-8); padding: var(--space-4) var(--space-6);
+  position: relative; display: grid; align-items: center; gap: var(--space-3) var(--space-8); padding: var(--space-3) var(--space-6);
   grid-template-columns: auto minmax(0, 1fr) auto auto;
   background: linear-gradient(100deg, color-mix(in srgb, var(--brass) 6%, var(--surface)) 0%, var(--surface) 38%);
 }
@@ -26,7 +26,7 @@
 
 .market-stats { display: flex; flex-wrap: wrap; gap: var(--space-4) 40px; margin: 0; min-width: 0; padding-left: var(--space-6); border-left: 1px solid var(--line); }
 .market-stat { display: grid; gap: 4px; align-content: start; }
-.market-stat dd { margin: 0; font-size: 13px; line-height: 18px; }
+.market-stat dd { margin: 0; font-size: 13px; line-height: 18px; white-space: nowrap; }
 .market-stat-range { min-width: 200px; }
 .market-range-ends { display: flex; justify-content: space-between; gap: var(--space-4); }
 .market-range { position: relative; display: block; height: 3px; margin-top: 6px; border-radius: 3px; background: linear-gradient(90deg, var(--ask-soft), var(--line) 50%, var(--bid-soft)); }
@@ -52,27 +52,55 @@
 .market-live.is-delayed { color: var(--brass); }
 .market-live-dot-off { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--brass); }
 
-@media (max-width: 1180px) {
-  .market-header { grid-template-columns: auto minmax(0, 1fr) auto; }
-  .market-live { grid-column: 3; grid-row: 1; }
-  .market-stats { grid-column: 1 / -1; padding: var(--space-3) 0 0; border-left: 0; border-top: 1px solid var(--line); }
-  .market-spark { grid-column: 2; grid-row: 1; }
-}
-@media (max-width: 720px) {
-  .market-header { grid-template-columns: minmax(0, 1fr); gap: var(--space-3); padding: var(--space-4); }
-  .market-live { grid-column: 1; grid-row: auto; white-space: normal; }
-  .market-spark { grid-column: 1; grid-row: auto; justify-items: stretch; }
-  .market-spark svg { width: 100%; height: 48px; }
-  .market-stats { gap: var(--space-3) var(--space-6); }
-  .market-stat-range { min-width: 0; flex: 1 1 100%; }
+@media (max-height: 800px) {
+  .market-header { padding-block: var(--space-2); }
+  .market-last-line { min-height: 32px; }
   .market-last { font-size: 26px; line-height: 32px; }
+  .market-spark svg { height: 36px; }
+}
+/* Tablet: one row still; the sparkline gives way, its change stays */
+@media (max-width: 1180px) {
+  .market-header { gap: var(--space-3) var(--space-6); padding-inline: var(--space-4); }
+  .market-stats { gap: var(--space-3) var(--space-6); padding-left: var(--space-4); flex-wrap: nowrap; }
+  .market-stat-range { min-width: 160px; }
+  .market-spark svg { display: none; }
+}
+/* Phone: two lines, pair and last price over the 24 h range and the change */
+@media (max-width: 900px) {
+  .market-header { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: 'ticker live' 'stats spark'; gap: 2px var(--space-3); padding: var(--space-2) var(--space-3); }
+  .market-ticker { grid-area: ticker; display: flex; align-items: center; gap: var(--space-3); min-width: 0; }
+  .market-pair-tag { display: none; }
+  .market-last-line { min-height: 28px; }
+  .market-last { font-size: 20px; line-height: 28px; }
+  .market-last .lt-unit { font-size: 11px; }
+  .market-last-skeleton { width: 120px; height: 20px; }
+  .market-live { grid-area: live; align-self: center; }
+  .market-live-text { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .market-stats { grid-area: stats; padding: 0; border: 0; min-width: 0; }
+  .market-stat:not(.market-stat-range) { display: none; }
+  .market-stat-range { min-width: 0; display: flex; align-items: baseline; gap: var(--space-2); }
+  .market-stat-range dt { font-size: 10px; line-height: 14px; }
+  .market-stat-range dd { font-size: 12px; line-height: 16px; }
+  .market-range-ends { gap: 0; }
+  .market-range-ends > span + span::before { content: '\00a0–\00a0'; color: var(--ink-faint); }
+  .market-range { display: none; }
+  .market-spark { grid-area: spark; align-self: center; }
+  .market-spark-caption .lt-muted { display: none; }
 }
 
 /* Order book */
-.market-book { display: grid; gap: var(--space-3); align-content: start; min-width: 0; padding: var(--space-4) 0 0; overflow: hidden; }
+.market-book { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; min-height: 0; padding: var(--space-4) 0 0; overflow: hidden; }
+.market-book > .market-panel-head { flex: 0 0 auto; }
+/* The rows are counted to fit this box (OrderBookPanel): the last price strip and the readout have fixed heights for that */
+.market-book-body { flex: 1 1 auto; min-height: 0; overflow: hidden; display: flex; flex-direction: column; }
+.market-book-body > .lt-book { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+.market-book .lt-book-head, .market-book .lt-book-row { flex: 0 0 auto; }
+.market-book .lt-book-mid { flex: 0 0 52px; height: 52px; padding-block: 0; }
+.market-book .lt-book-readout { flex: 0 0 56px; height: 56px; margin-top: auto; overflow: hidden; align-content: center; }
 .market-book > .market-panel-head { padding: 0 var(--space-4); }
 .market-book .lt-book { max-width: none; border: 0; border-top: 1px solid var(--line); border-radius: 0; }
 .market-book .lt-empty { max-width: none; margin: 0 var(--space-4) var(--space-4); }
+.market-book-tools { min-width: 0; }
 .market-book-tools { display: flex; align-items: center; gap: var(--space-3); }
 
 .market-views { display: inline-flex; gap: 2px; padding: 2px; border-radius: var(--radius-md); background: var(--surface-raised); }
@@ -104,18 +132,20 @@
 .market-skeleton-bar { position: absolute; right: 0; top: 3px; bottom: 3px; opacity: .5; }
 .market-skeleton-row.is-ask .market-skeleton-bar { background: var(--ask-soft); }
 .market-skeleton-row.is-bid .market-skeleton-bar { background: var(--bid-soft); }
-.market-book-skeleton .market-skeleton-row:nth-child(7) { margin-top: 36px; }
+.market-book-skeleton .market-skeleton-row.is-first-bid { margin-top: 52px; }
 
 /* Depth chart */
-.market-depth { padding: var(--space-4); display: grid; gap: var(--space-3); min-width: 0; }
+.market-depth { padding: var(--space-4); display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; min-height: 0; overflow: hidden; }
+.market-depth > .market-panel-head { flex: 0 0 auto; }
 .market-legend { display: flex; gap: var(--space-4); font-size: 12px; color: var(--ink-muted); }
 .market-legend > span { display: inline-flex; align-items: center; gap: 6px; }
 .market-legend-swatch { width: 10px; height: 10px; border-radius: 2px; }
 .market-legend-swatch.is-bid { background: var(--bid-soft); box-shadow: inset 0 2px 0 var(--bid); }
 .market-legend-swatch.is-ask { background: var(--ask-soft); box-shadow: inset 0 2px 0 var(--ask); }
-.market-depth-plot { position: relative; }
-.market-depth-chart { width: 100%; height: auto; display: block; cursor: crosshair; touch-action: pan-y; }
-.market-depth-skeleton { aspect-ratio: 640 / 260; border-radius: var(--radius-md); }
+.market-depth-plot { position: relative; flex: 1 1 auto; min-height: 0; }
+/* Drawn at the plot's own size (DepthChart measures it), so it never pushes the panel */
+.market-depth-chart { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: crosshair; touch-action: pan-y; }
+.market-depth-skeleton { position: absolute; inset: 0; border-radius: var(--radius-md); }
 .market-depth-axis { stroke: var(--line-strong); stroke-width: 1; }
 .market-depth-grid { stroke: var(--line); stroke-width: 1; stroke-dasharray: 2 4; }
 .market-depth-stop-bid { stop-color: var(--bid); }
@@ -152,19 +182,21 @@
 .market-depth-tip-row .lt-num { color: var(--ink); }
 
 /* Recent trades */
-.market-trades { overflow: hidden; min-width: 0; }
-.market-trades-head { padding: var(--space-4) var(--space-4) var(--space-3); border-bottom: 1px solid var(--line); }
+.market-trades { overflow: hidden; min-width: 0; min-height: 0; display: flex; flex-direction: column; container-type: inline-size; }
+.market-trades-head { flex: 0 0 auto; padding: var(--space-4) var(--space-4) var(--space-3); border-bottom: 1px solid var(--line); }
+/* Rows are counted to fit this box (RecentTrades): a 28 px head and 26 px rows, no scrollbar */
+.market-trades-body { flex: 1 1 auto; min-height: 0; overflow: hidden; }
 .market-trades-empty { margin: 0; padding: var(--space-4); font-size: 13px; }
 .market-trades-skeleton { padding: var(--space-2) var(--space-1); }
-.market-trades-scroll { overflow-x: auto; max-height: 360px; overflow-y: auto; }
+.market-trades-fit { overflow: hidden; }
 .market-trades-table { width: 100%; border-collapse: collapse; font-size: 13px; }
 .market-trades-table thead tr { background: var(--surface-raised); color: var(--ink-muted); font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
-.market-trades-table thead th { position: sticky; top: 0; z-index: 1; background: var(--surface-raised); }
-.market-trades-table th, .market-trades-table td { text-align: left; padding: 2px var(--space-3); height: 26px; white-space: nowrap; }
-.market-trades-table th { padding-block: 6px; }
+.market-trades-table thead th { background: var(--surface-raised); }
+.market-trades-table th, .market-trades-table td { text-align: left; padding: 0 var(--space-3); height: 26px; white-space: nowrap; }
+.market-trades-table th { height: 28px; }
 .market-trades-table th:first-child, .market-trades-table td:first-child { padding-left: var(--space-4); }
 .market-trades-table th:last-child, .market-trades-table td:last-child { padding-right: var(--space-4); }
-.market-trades-table tbody tr { border-top: 1px solid color-mix(in srgb, var(--line) 60%, transparent); transition: background-color var(--duration-fast); }
+.market-trades-table tbody tr { box-shadow: inset 0 1px 0 color-mix(in srgb, var(--line) 60%, transparent); transition: background-color var(--duration-fast); }
 .market-trades-table tbody tr:hover { background: color-mix(in srgb, var(--surface-raised) 70%, transparent); }
 .market-trades-table .is-num { text-align: right; }
 .market-trade-buy { color: var(--bid); }
@@ -181,9 +213,21 @@
 .market-notice strong { font-weight: 600; }
 .market-not-found { max-width: 480px; }
 
-@media (max-width: 480px) {
+/* A narrow column drops the units from the heads (the screen reader still gets the full name from the panel) and tightens */
+@container (max-width: 480px) {
+  .market-trades-unit { display: none; }
   .market-trades-table { font-size: 12px; }
+  .market-trades-table thead tr { font-size: 10px; letter-spacing: .04em; }
   .market-trades-table th, .market-trades-table td { padding-inline: 6px; }
   .market-trades-table th:first-child, .market-trades-table td:first-child { padding-left: var(--space-3); }
   .market-trades-table th:last-child, .market-trades-table td:last-child { padding-right: var(--space-3); }
+}
+
+/* Behind the tabs the tab names the panel: titles stay for screen readers only, the tools keep their row */
+@media (max-width: 900px) {
+  .market-book .market-panel-titles, .market-trades-head, .market-depth .market-panel-titles {
+    position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+  }
+  .market-book { padding-top: var(--space-3); }
+  .market-book .lt-book-readout { font-size: 11px; }
 }

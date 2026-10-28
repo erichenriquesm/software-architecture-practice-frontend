@@ -9,7 +9,7 @@ test('Should sign in, see the market, deposit, find the orders and sign out', as
   await expect(page).toHaveURL(/\/entrar\?voltar=\/carteira/);
 
   await page.getByLabel('E-mail').fill(email);
-  await page.getByLabel('Senha').fill(password);
+  await page.getByLabel('Senha', { exact: true }).fill(password);
   await page.getByRole('button', { name: 'Entrar' }).click();
   await expect(page.getByRole('heading', { name: 'Carteira' })).toBeVisible();
 

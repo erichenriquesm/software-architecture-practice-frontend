@@ -1,9 +1,15 @@
-/* Sign in and sign up: the live market on the left, the form on the right. */
-.auth-page { flex-grow: 1; display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(400px, 1fr); min-height: 100vh; }
-.auth-side { display: flex; align-items: center; justify-content: center; padding: 48px 32px; }
+/*
+ * Sign in and sign up: the live market on the left, the form on the right, always exactly one viewport.
+ * On very large screens the split keeps the shared content size and sits in the middle, framed like a card.
+ */
+.auth-page { width: 100%; max-width: var(--content-max, 1600px); max-height: var(--content-max-height, 1100px); margin: auto; display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(400px, 1fr); overflow: hidden; }
+@media (min-width: 1601px), (min-height: 1101px) {
+  .auth-page { border: 1px solid var(--line); border-radius: var(--radius-lg); box-shadow: var(--shadow-card); }
+}
+.auth-side { display: flex; align-items: center; justify-content: center; min-height: 0; padding: clamp(12px, 4vh, 48px) 32px; overflow: hidden; }
 
-.auth-form { width: 100%; max-width: 420px; display: grid; gap: var(--space-4); }
-.auth-form.lt-panel { padding: 32px 28px; background: color-mix(in srgb, var(--surface) 92%, transparent); backdrop-filter: blur(8px); }
+.auth-form { width: 100%; max-width: 440px; display: grid; gap: clamp(10px, 1.8vh, 16px); }
+.auth-form.lt-panel { padding: clamp(16px, 3.4vh, 32px) 28px; background: color-mix(in srgb, var(--surface) 92%, transparent); backdrop-filter: blur(8px); }
 .auth-heading { display: grid; gap: var(--space-1); }
 .auth-heading p { margin: 0; }
 .auth-heading .lt-eyebrow { color: var(--brass); }
@@ -26,6 +32,8 @@
 .password-meter span.is-on { background: var(--brass); }
 .password-meter[data-level='4'] span.is-on { background: var(--success); box-shadow: 0 0 8px color-mix(in srgb, var(--success) 45%, transparent); }
 .password-rules { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 12px; font-size: 12px; color: var(--ink-muted); }
+.password-next { display: none; margin: 0; font-size: 12px; line-height: 16px; color: var(--ink-muted); }
+.password-next.is-done { color: var(--success); }
 .password-rules li { display: flex; align-items: center; gap: 6px; transition: color var(--duration-base); }
 .password-rules .is-satisfied { color: var(--success); }
 .password-check { position: relative; flex: none; width: 14px; height: 14px; border-radius: 50%; border: 1px solid var(--line-strong); transition: border-color var(--duration-base), background-color var(--duration-base) var(--ease-out), transform var(--duration-slow) var(--ease-out); }
@@ -34,7 +42,7 @@
 .is-satisfied .password-check::after { transform: rotate(45deg) scale(1); }
 
 /* Hero */
-.auth-hero { position: relative; isolation: isolate; overflow: hidden; display: grid; align-content: space-between; gap: 40px; padding: 40px 56px 48px; border-right: 1px solid var(--line); background: color-mix(in srgb, var(--ground) 70%, var(--surface)); }
+.auth-hero { position: relative; isolation: isolate; overflow: hidden; min-height: 0; display: grid; grid-template-rows: auto auto minmax(0, 1fr); gap: clamp(16px, 4vh, 40px); padding: clamp(20px, 4.5vh, 40px) clamp(24px, 4vw, 56px) clamp(20px, 5vh, 48px); border-right: 1px solid var(--line); background: color-mix(in srgb, var(--ground) 70%, var(--surface)); }
 .auth-hero-backdrop { position: absolute; inset: -20%; z-index: -1; pointer-events: none;
   background:
     radial-gradient(40% 35% at 30% 30%, color-mix(in srgb, var(--brass) 16%, transparent), transparent 70%),
@@ -62,11 +70,12 @@
 .auth-hero-copy { display: grid; gap: var(--space-4); max-width: 560px; }
 .auth-hero-copy p { margin: 0; }
 .auth-hero-eyebrow { color: var(--brass); }
-.auth-hero-headline { font: 700 44px/48px var(--font-display); letter-spacing: -0.025em; text-wrap: balance; }
+.auth-hero-headline { font: 700 clamp(26px, min(5.2vh, 3.2vw), 44px)/1.1 var(--font-display); letter-spacing: -0.025em; text-wrap: balance; }
 .auth-hero-accent { color: var(--brass); }
 .auth-hero-lede { font-size: 15px; line-height: 24px; color: var(--ink-muted); max-width: 460px; }
 
-/* The live card: last price, a five-level book and the latest trades */
+/* The live card: last price, the book levels that fit and, with room to spare, the latest trades */
+.auth-live-slot { min-height: 0; display: flex; align-items: flex-end; overflow: hidden; }
 .auth-live { margin: 0; width: 100%; max-width: 440px; display: grid; background: color-mix(in srgb, var(--surface) 88%, transparent); border: 1px solid var(--line); border-radius: var(--radius-lg); box-shadow: var(--shadow-card), 0 24px 64px -32px color-mix(in srgb, var(--brass) 30%, transparent); backdrop-filter: blur(10px); overflow: hidden; }
 .auth-live-head { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid var(--line); }
 .auth-live-market { font: 600 11px/14px var(--font-sans); letter-spacing: .08em; text-transform: uppercase; }
@@ -108,22 +117,37 @@
 .auth-trades-qty { color: var(--ink-muted); }
 
 @media (max-width: 1080px) {
-  .auth-hero { padding: 32px; }
-  .auth-hero-headline { font-size: 34px; line-height: 40px; }
+  .auth-hero-headline { font-size: clamp(24px, min(4.4vh, 3.4vw), 34px); }
+}
+/* Short screens: the headline shrinks (above) and the secondary copy goes */
+@media (max-height: 800px) {
+  .auth-hero-lede { display: none; }
+}
+@media (max-height: 760px) {
+  .auth-heading .lt-muted, .auth-note { display: none; }
 }
 
 /* Small screens: the hero collapses into a strip with the brand and the live price */
 @media (max-width: 860px) {
-  .auth-page { grid-template-columns: 1fr; grid-template-rows: auto 1fr; min-height: 100vh; }
-  .auth-hero { grid-template-columns: auto 1fr; align-items: center; align-content: center; gap: 16px; padding: 14px 16px; border-right: 0; border-bottom: 1px solid var(--line); }
+  .auth-page { grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 1fr); max-height: none; border: 0; border-radius: 0; box-shadow: none; }
+  .auth-hero { grid-template-columns: auto 1fr; grid-template-rows: auto; align-items: center; align-content: center; gap: 16px; padding: 14px 16px; border-right: 0; border-bottom: 1px solid var(--line); }
   .auth-hero-copy, .auth-book, .auth-trades, .auth-live-head { display: none; }
+  .auth-live-slot { justify-content: flex-end; overflow: visible; }
   .auth-live { justify-self: end; width: auto; background: transparent; border: 0; box-shadow: none; backdrop-filter: none; }
   .auth-live-price { padding: 0; justify-items: end; }
-  .auth-live-last { font-size: 18px; line-height: 24px; }
+  .auth-live-last { font-size: 18px; line-height: 24px; margin: 0; padding: 0; }
   .auth-live-unit { font-size: 11px; }
-  .auth-side { padding: 24px 16px 40px; align-items: flex-start; }
-  .auth-form.lt-panel { padding: 24px 20px; }
+  .auth-side { padding: clamp(10px, 3vh, 24px) 16px; align-items: center; }
+  .auth-form.lt-panel { padding: clamp(14px, 3vh, 24px) clamp(14px, 4vw, 20px); }
+  .auth-heading .lt-eyebrow, .auth-note { display: none; }
 }
 @media (max-width: 480px) {
   .auth-pair { grid-template-columns: 1fr; }
+  .auth-form .lt-page-title { font-size: 24px; line-height: 28px; }
+}
+/* Very short screens: the password checklist folds into the meter; the list stays for screen readers */
+@media (max-height: 700px) {
+  .auth-heading .lt-muted { display: none; }
+  .password-next { display: block; }
+  .password-rules { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 }

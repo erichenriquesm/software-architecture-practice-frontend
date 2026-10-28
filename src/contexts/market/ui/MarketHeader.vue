@@ -109,7 +109,7 @@ const freshness = computed(() => {
 
     <p :class="['market-live', { 'is-delayed': props.delayed }]">
       <span :class="props.delayed ? 'market-live-dot-off' : 'lt-live-dot'" aria-hidden="true"></span>
-      {{ freshness }}
+      <span class="market-live-text">{{ freshness }}</span>
     </p>
   </section>
 </template>

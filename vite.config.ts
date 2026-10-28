@@ -12,6 +12,8 @@ export default defineConfig({
   server: {
     port: 5173,
     strictPort: true,
+    // Dev has no CSP (HMR injects inline scripts); the production nginx sets the full policy
+    headers: { 'X-Content-Type-Options': 'nosniff', 'X-Frame-Options': 'DENY', 'Referrer-Policy': 'same-origin' },
     // Exact match: a prefix like /me would also catch the /mercado page
     proxy: { [apiRoutes]: { target: edge, changeOrigin: false, xfwd: true } },
   },

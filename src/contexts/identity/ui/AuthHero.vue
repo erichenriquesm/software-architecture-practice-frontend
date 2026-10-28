@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed } from 'vue';
-import { formatDecimal, useFlash } from '@/lastro';
+import { computed, ref } from 'vue';
+import { formatDecimal, useFitCount, useFlash } from '@/lastro';
 import { useMarketPreview } from '../application/useMarketPreview';
 
 const { marketId, book, lastTrade, recentTrades, loading, live } = useMarketPreview();
@@ -9,7 +9,22 @@ const { flashClass, direction, flashKey } = useFlash(() => lastTrade.value?.pric
 const price = (value: string) => formatDecimal(value, 2);
 const size = (value: string) => formatDecimal(value, 5);
 const marks = { buy: '▲', sell: '▼' } as const;
-const skeletonRows = [1, 2, 3, 4, 5];
+
+/**
+ * The screen never scrolls: the card shows as many book levels as the free space at the bottom of the hero allows
+ * (up to five a side), and the latest trades only when there is room left after the five levels.
+ */
+const rowPx = 22;
+const cardChromePx = 160;
+const tradesPx = 96;
+const slot = ref<HTMLElement>();
+const slotHeight = useFitCount(slot, 1, { min: 0 });
+const room = computed(() => slotHeight.value - cardChromePx);
+const showTrades = computed(() => room.value >= 10 * rowPx + tradesPx);
+const levels = computed(() => Math.max(0, Math.min(5, Math.floor(room.value / (2 * rowPx)))));
+const asks = computed(() => book.value.asks.slice(Math.max(0, book.value.asks.length - levels.value)));
+const bids = computed(() => book.value.bids.slice(0, levels.value));
+const skeletonRows = computed(() => Array.from({ length: levels.value }, (_, index) => index + 1));
 
 const summary = computed(() => {
   const last = lastTrade.value ? `Último preço ${price(lastTrade.value.price)} USD.` : 'Ainda sem negociações.';
@@ -34,61 +49,63 @@ const summary = computed(() => {
       <p class="auth-hero-lede">Sua ordem espera no livro até alguém aceitar o seu preço. Enquanto isso, só o valor dela fica reservado.</p>
     </div>
 
-    <figure class="auth-live lt-rise lt-rise-2">
-      <figcaption class="lt-visually-hidden">{{ summary }}</figcaption>
-      <div class="auth-live-head" aria-hidden="true">
-        <span class="auth-live-market">{{ marketId }}</span>
-        <span :class="['auth-live-state', { 'is-live': live }]">
-          <span :class="live ? 'lt-live-dot' : 'auth-live-dot-off'"></span>
-          {{ live ? 'ao vivo' : loading ? 'conectando' : 'sem conexão' }}
-        </span>
-      </div>
-
-      <div class="auth-live-price" aria-hidden="true">
-        <span :key="flashKey" :class="['auth-live-last', flashClass, direction ? `is-${direction}` : '']">
-          <span v-if="direction" class="auth-live-mark">{{ direction === 'up' ? '▲' : '▼' }}</span>{{ lastTrade ? price(lastTrade.price) : '–' }}
-        </span>
-        <span class="auth-live-unit">USD · último preço</span>
-      </div>
-
-      <div class="auth-book" aria-hidden="true">
-        <div class="auth-book-head"><span>Preço</span><span>Quantidade</span></div>
-        <template v-if="loading">
-          <div v-for="row in skeletonRows" :key="`ask-${row}`" class="auth-book-row"><span class="lt-skeleton auth-book-skeleton"></span></div>
-        </template>
-        <template v-else>
-          <p v-if="book.asks.length === 0" class="auth-book-none">Sem ofertas de venda agora</p>
-          <div v-for="row in book.asks" :key="`ask-${row.price}`" class="auth-book-row is-ask">
-            <span class="auth-book-bar" :style="{ width: `${row.depth}%` }"></span>
-            <span class="auth-book-price">{{ price(row.price) }}</span>
-            <span class="auth-book-qty">{{ size(row.quantity) }}</span>
-          </div>
-        </template>
-
-        <div class="auth-book-spread">
-          <span>spread</span><span class="lt-num">{{ book.spread === undefined ? '–' : price(book.spread) }}</span>
+    <div ref="slot" class="auth-live-slot">
+      <figure class="auth-live lt-rise lt-rise-2">
+        <figcaption class="lt-visually-hidden">{{ summary }}</figcaption>
+        <div class="auth-live-head" aria-hidden="true">
+          <span class="auth-live-market">{{ marketId }}</span>
+          <span :class="['auth-live-state', { 'is-live': live }]">
+            <span :class="live ? 'lt-live-dot' : 'auth-live-dot-off'"></span>
+            {{ live ? 'ao vivo' : loading ? 'conectando' : 'sem conexão' }}
+          </span>
         </div>
 
-        <template v-if="loading">
-          <div v-for="row in skeletonRows" :key="`bid-${row}`" class="auth-book-row"><span class="lt-skeleton auth-book-skeleton"></span></div>
-        </template>
-        <template v-else>
-          <div v-for="row in book.bids" :key="`bid-${row.price}`" class="auth-book-row is-bid">
-            <span class="auth-book-bar" :style="{ width: `${row.depth}%` }"></span>
-            <span class="auth-book-price">{{ price(row.price) }}</span>
-            <span class="auth-book-qty">{{ size(row.quantity) }}</span>
-          </div>
-          <p v-if="book.bids.length === 0" class="auth-book-none">Sem ofertas de compra agora</p>
-        </template>
-      </div>
+        <div class="auth-live-price" aria-hidden="true">
+          <span :key="flashKey" :class="['auth-live-last', flashClass, direction ? `is-${direction}` : '']">
+            <span v-if="direction" class="auth-live-mark">{{ direction === 'up' ? '▲' : '▼' }}</span>{{ lastTrade ? price(lastTrade.price) : '–' }}
+          </span>
+          <span class="auth-live-unit">USD · último preço</span>
+        </div>
 
-      <TransitionGroup v-if="recentTrades.length > 0" tag="ol" name="lt-row" class="auth-trades" aria-hidden="true">
-        <li v-for="trade in recentTrades" :key="trade.tradeId" :class="`is-${trade.side}`">
-          <span class="auth-trades-side">{{ marks[trade.side] }}</span>
-          <span class="lt-num auth-trades-price">{{ price(trade.price) }}</span>
-          <span class="lt-num auth-trades-qty">{{ size(trade.quantity) }} BTC</span>
-        </li>
-      </TransitionGroup>
-    </figure>
+        <div v-if="levels > 0" class="auth-book" aria-hidden="true">
+          <div class="auth-book-head"><span>Preço</span><span>Quantidade</span></div>
+          <template v-if="loading">
+            <div v-for="row in skeletonRows" :key="`ask-${row}`" class="auth-book-row"><span class="lt-skeleton auth-book-skeleton"></span></div>
+          </template>
+          <template v-else>
+            <p v-if="book.asks.length === 0" class="auth-book-none">Sem ofertas de venda agora</p>
+            <div v-for="row in asks" :key="`ask-${row.price}`" class="auth-book-row is-ask">
+              <span class="auth-book-bar" :style="{ width: `${row.depth}%` }"></span>
+              <span class="auth-book-price">{{ price(row.price) }}</span>
+              <span class="auth-book-qty">{{ size(row.quantity) }}</span>
+            </div>
+          </template>
+
+          <div class="auth-book-spread">
+            <span>spread</span><span class="lt-num">{{ book.spread === undefined ? '–' : price(book.spread) }}</span>
+          </div>
+
+          <template v-if="loading">
+            <div v-for="row in skeletonRows" :key="`bid-${row}`" class="auth-book-row"><span class="lt-skeleton auth-book-skeleton"></span></div>
+          </template>
+          <template v-else>
+            <div v-for="row in bids" :key="`bid-${row.price}`" class="auth-book-row is-bid">
+              <span class="auth-book-bar" :style="{ width: `${row.depth}%` }"></span>
+              <span class="auth-book-price">{{ price(row.price) }}</span>
+              <span class="auth-book-qty">{{ size(row.quantity) }}</span>
+            </div>
+            <p v-if="book.bids.length === 0" class="auth-book-none">Sem ofertas de compra agora</p>
+          </template>
+        </div>
+
+        <TransitionGroup v-if="showTrades && recentTrades.length > 0" tag="ol" name="lt-row" class="auth-trades" aria-hidden="true">
+          <li v-for="trade in recentTrades" :key="trade.tradeId" :class="`is-${trade.side}`">
+            <span class="auth-trades-side">{{ marks[trade.side] }}</span>
+            <span class="lt-num auth-trades-price">{{ price(trade.price) }}</span>
+            <span class="lt-num auth-trades-qty">{{ size(trade.quantity) }} BTC</span>
+          </li>
+        </TransitionGroup>
+      </figure>
+    </div>
   </section>
 </template>

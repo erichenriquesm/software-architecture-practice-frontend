@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, useTemplateRef } from 'vue';
 import type { Market } from '@/entities/market';
-import { LtOrderBook, formatDecimal } from '@/lastro';
-import { depthPrecisions, nearestLevels } from '../domain/depth';
+import { LtOrderBook, formatDecimal, useFitCount } from '@/lastro';
+import { depthPrecisions } from '../domain/depth';
+import { levelsThatFit } from '../domain/fit';
+import type { BookView } from '../domain/fit';
 import type { DepthLevel } from '../domain/marketData';
 
 const props = defineProps<{
@@ -16,7 +18,6 @@ const props = defineProps<{
 const precision = defineModel<number>('precision', { required: true });
 const emit = defineEmits<{ pick: [price: string] }>();
 
-type BookView = 'both' | 'bids' | 'asks';
 const views: ReadonlyArray<{ value: BookView; label: string }> = [
   { value: 'both', label: 'Compras e vendas' },
   { value: 'bids', label: 'Só compras' },
@@ -24,13 +25,18 @@ const views: ReadonlyArray<{ value: BookView; label: string }> = [
 ];
 const view = ref<BookView>('both');
 
-const levelsPerSide = computed(() => (view.value === 'both' ? 10 : 20));
-const bids = computed(() => (view.value === 'asks' ? [] : nearestLevels(props.bids, 'bid', levelsPerSide.value)));
-const asks = computed(() => (view.value === 'bids' ? [] : nearestLevels(props.asks, 'ask', levelsPerSide.value)));
+/** Rows of 24 px; the column head, the last price strip and the readout below take the rest (heights fixed in market.css). */
+const rowHeight = 24;
+const bookChrome = 28 + 52 + 56 + 1;
+const body = useTemplateRef<HTMLElement>('body');
+const rows = useFitCount(body, rowHeight, { reservedPx: bookChrome, min: 2 });
+const fitted = computed(() => levelsThatFit(props.bids, props.asks, rows.value, view.value));
 const empty = computed(() => props.bids.length === 0 && props.asks.length === 0);
 const stepLabel = (step: string) => formatDecimal(step, Math.max(0, step.split('.')[1]?.length ?? 0));
 
-const skeletonRows = [72, 48, 88, 60, 40, 80, 56, 92, 64, 44];
+const skeletonWidths = [72, 48, 88, 60, 40, 80, 56, 92, 64, 44];
+/** As many placeholder rows as real ones would fit, half of them asks. */
+const skeletonRows = computed(() => Array.from({ length: Math.max(2, rows.value) }, (_, index) => ({ width: skeletonWidths[index % skeletonWidths.length] ?? 60, ask: index < Math.max(1, Math.floor(rows.value / 2)) })));
 
 /** Arrow keys move between the view options, like the side toggle. */
 const moveView = (event: KeyboardEvent) => {
@@ -80,28 +86,30 @@ const moveView = (event: KeyboardEvent) => {
         </label>
       </div>
     </header>
-    <div v-if="props.loading" class="market-book-skeleton" aria-busy="true" aria-label="Carregando livro de ofertas">
-      <div class="market-skeleton-head"></div>
-      <div v-for="(width, index) in skeletonRows" :key="index" :class="['market-skeleton-row', index < 5 ? 'is-ask' : 'is-bid']">
-        <span class="lt-skeleton" style="width: 72px"></span>
-        <span class="lt-skeleton" :style="{ width: `${width}px` }"></span>
-        <span class="market-skeleton-bar" :style="{ width: `${width / 2}%` }"></span>
+    <div ref="body" class="market-book-body">
+      <div v-if="props.loading" class="market-book-skeleton" aria-busy="true" aria-label="Carregando livro de ofertas">
+        <div class="market-skeleton-head"></div>
+        <div v-for="(row, index) in skeletonRows" :key="index" :class="['market-skeleton-row', row.ask ? 'is-ask' : 'is-bid', { 'is-first-bid': !row.ask && skeletonRows[index - 1]?.ask }]">
+          <span class="lt-skeleton" style="width: 72px"></span>
+          <span class="lt-skeleton" :style="{ width: `${row.width}px` }"></span>
+          <span class="market-skeleton-bar" :style="{ width: `${row.width / 2}%` }"></span>
+        </div>
       </div>
+      <div v-else-if="empty" class="lt-empty market-book-empty">
+        <p class="lt-empty-title">Livro vazio</p>
+        <p class="lt-muted market-empty-detail">Ninguém tem ordem aberta neste mercado agora. A sua pode ser a primeira.</p>
+      </div>
+      <LtOrderBook
+        v-else
+        class="market-book-table"
+        :bids="fitted.bids"
+        :asks="fitted.asks"
+        :base="props.market.base"
+        :quote="props.market.quote"
+        :spread="props.spread"
+        :last-price="props.lastPrice"
+        @pick="emit('pick', $event)"
+      />
     </div>
-    <div v-else-if="empty" class="lt-empty market-book-empty">
-      <p class="lt-empty-title">Livro vazio</p>
-      <p class="lt-muted market-empty-detail">Ninguém tem ordem aberta neste mercado agora. A sua pode ser a primeira.</p>
-    </div>
-    <LtOrderBook
-      v-else
-      class="market-book-table"
-      :bids="bids"
-      :asks="asks"
-      :base="props.market.base"
-      :quote="props.market.quote"
-      :spread="props.spread"
-      :last-price="props.lastPrice"
-      @pick="emit('pick', $event)"
-    />
   </section>
 </template>

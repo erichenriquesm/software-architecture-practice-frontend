@@ -111,13 +111,11 @@ defineExpose({ startDeposit });
       </Transition>
 
       <div class="wallet-select-field">
-        <label class="lt-field-label" for="movement-asset">Ativo</label>
-        <div class="wallet-select-box">
-          <span :class="['wallet-glyph', 'wallet-glyph-sm', `is-${form.values.assetId.toLowerCase()}`]" aria-hidden="true">{{ form.values.assetId }}</span>
-          <select id="movement-asset" v-model="form.values.assetId" class="wallet-select" @change="form.touch('assetId')">
-            <option v-for="asset in assets" :key="asset" :value="asset">{{ asset }}</option>
-          </select>
-        </div>
+        <label class="wallet-select-label" for="movement-asset">Ativo</label>
+        <span :class="['wallet-glyph', 'wallet-glyph-sm', `is-${form.values.assetId.toLowerCase()}`]" aria-hidden="true">{{ form.values.assetId }}</span>
+        <select id="movement-asset" v-model="form.values.assetId" class="lt-select wallet-select" @change="form.touch('assetId')">
+          <option v-for="asset in assets" :key="asset" :value="asset">{{ asset }}</option>
+        </select>
       </div>
 
       <LtAmountField

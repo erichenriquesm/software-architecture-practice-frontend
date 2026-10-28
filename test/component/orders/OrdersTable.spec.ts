@@ -1,11 +1,11 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/vue';
 import { http, HttpResponse } from 'msw';
-import { describe, expect, test } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import { OrdersTable } from '@/contexts/orders';
 import type { OrderResponse } from '@/contexts/orders/infra/orders.api';
 import { renderWithApp } from '../../support/renderWithApp';
 import { server } from '../../support/server';
-import { accountId, fastOrdersApi, orderResponse } from './support';
+import { accountId, fastOrdersApi, heightForRows, layoutOrdersBody, orderResponse } from './support';
 
 const open = orderResponse('o-open', { status: 'open', price: '82900.00', quantity: '0.50000000' });
 const partial = orderResponse('o-partial', { status: 'partiallyFilled', fillQuantity: '5.00000000', fillPrice: '83000.00000000' });
@@ -15,6 +15,12 @@ const rejected = orderResponse('o-rejected', { status: 'rejected', statusReason:
 const serveOrders = (current: () => readonly OrderResponse[]) => server.use(http.get(`/accounts/${accountId}/orders`, () => HttpResponse.json(current())));
 
 const rows = () => screen.getAllByRole('row').slice(1);
+
+let layout: ReturnType<typeof layoutOrdersBody>;
+beforeEach(() => {
+  layout = layoutOrdersBody(heightForRows(20));
+});
+afterEach(() => layout.restore());
 
 describe('Orders table', () => {
   test('Should list the orders with side, amounts and status, linking each one to its detail', async () => {
@@ -134,5 +140,79 @@ describe('Orders table', () => {
 
     expect((await screen.findByRole('alert')).textContent).toContain('Esta ordem não pode mais ser cancelada.');
     await waitFor(() => expect(screen.getByText('Executada')).toBeTruthy());
+  });
+});
+
+describe('Orders table pagination', () => {
+  const many = Array.from({ length: 5 }, (_, index) =>
+    orderResponse(`o-${index}`, { status: index < 3 ? 'open' : 'filled', price: `8300${index}.00`, timestamp: `2026-10-28T13:4${9 - index}:00.000Z` }),
+  );
+  const range = () => screen.getByRole('navigation', { name: 'Páginas de ordens' }).querySelector('.orders-range')?.textContent;
+  const next = () => screen.getByRole('button', { name: 'Próxima página' });
+  const previous = () => screen.getByRole('button', { name: 'Página anterior' });
+
+  test('Should show only the rows that fit and page through the rest', async () => {
+    layout.resize(heightForRows(2));
+    serveOrders(() => many);
+    await renderWithApp(OrdersTable, { props: { accountId }, provide: fastOrdersApi });
+    await screen.findAllByText('Aberta');
+
+    expect(rows()).toHaveLength(2);
+    expect(range()).toBe('1–2 de 5');
+    expect((previous() as HTMLButtonElement).disabled).toBe(true);
+
+    await fireEvent.click(next());
+    expect(range()).toBe('3–4 de 5');
+    expect(rows()[0]?.textContent).toContain('83.002,00');
+
+    await fireEvent.click(next());
+    expect(range()).toBe('5–5 de 5');
+    expect(rows()).toHaveLength(1);
+    expect((next() as HTMLButtonElement).disabled).toBe(true);
+
+    await fireEvent.click(previous());
+    expect(range()).toBe('3–4 de 5');
+  });
+
+  test('Should take its page size from the space available and follow a resize', async () => {
+    layout.resize(heightForRows(3) + 20);
+    serveOrders(() => many);
+    await renderWithApp(OrdersTable, { props: { accountId }, provide: fastOrdersApi });
+    await screen.findAllByText('Aberta');
+    expect(rows()).toHaveLength(3);
+
+    layout.resize(heightForRows(4));
+    await waitFor(() => expect(rows()).toHaveLength(4));
+    expect(range()).toBe('1–4 de 5');
+  });
+
+  test('Should go back to the first page when the filter changes', async () => {
+    layout.resize(heightForRows(2));
+    serveOrders(() => many);
+    await renderWithApp(OrdersTable, { props: { accountId }, provide: fastOrdersApi });
+    await screen.findAllByText('Aberta');
+    await fireEvent.click(next());
+    expect(range()).toBe('3–4 de 5');
+
+    await fireEvent.click(screen.getByRole('button', { name: /^Abertas/ }));
+
+    expect(range()).toBe('1–2 de 3');
+  });
+
+  test('Should clamp to the last page when the list shrinks under it', async () => {
+    layout.resize(heightForRows(2));
+    let current: readonly OrderResponse[] = many;
+    serveOrders(() => current);
+    const { queryClient } = await renderWithApp(OrdersTable, { props: { accountId }, provide: fastOrdersApi });
+    await screen.findAllByText('Aberta');
+    await fireEvent.click(next());
+    await fireEvent.click(next());
+    expect(range()).toBe('5–5 de 5');
+
+    current = many.slice(0, 3);
+    await queryClient.invalidateQueries();
+
+    await waitFor(() => expect(range()).toBe('3–3 de 3'));
+    expect(rows()).toHaveLength(1);
   });
 });
