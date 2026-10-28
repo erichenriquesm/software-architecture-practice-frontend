@@ -102,3 +102,31 @@
 
 /* The amount box shows focus with its own ring; the bare input inside must not draw a second outline */
 .lt-field-input:focus, .lt-field-input:focus-visible, .lt-input:focus-visible { outline: none; }
+
+/* Help: a quiet "?" next to a term, and a bubble that explains it */
+.lt-help { display: inline-flex; vertical-align: middle; margin-left: 4px; }
+.lt-help-trigger {
+  display: inline-grid; place-items: center; width: 20px; height: 20px; padding: 0; border: 0; border-radius: 50%;
+  background: transparent; color: var(--ink-faint); cursor: help; transition: color var(--duration-fast), background-color var(--duration-fast), transform var(--duration-fast) var(--ease-out);
+}
+.lt-help-trigger:hover, .lt-help-trigger[aria-expanded='true'] { color: var(--brass); background: var(--brass-soft); transform: scale(1.08); }
+.lt-help-trigger:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 1px; }
+.lt-help-bubble {
+  position: fixed; z-index: 1000; width: max-content; max-width: min(300px, calc(100vw - 16px)); box-sizing: border-box;
+  display: grid; gap: 4px; padding: 10px 12px; border-radius: var(--radius-md);
+  background: var(--surface-raised); color: var(--ink); border: 1px solid var(--line-strong); box-shadow: var(--shadow-overlay);
+  font: 400 13px/18px var(--font-sans); text-transform: none; letter-spacing: normal; white-space: normal; text-align: left; pointer-events: auto;
+}
+.lt-help-bubble::after {
+  content: ''; position: absolute; left: calc(var(--arrow-left, 50%) - 5px); width: 10px; height: 10px; background: inherit;
+  border: inherit; border-width: 0 1px 1px 0; transform: rotate(45deg);
+}
+.lt-help-bubble.is-top::after { bottom: -6px; }
+.lt-help-bubble.is-bottom::after { top: -6px; transform: rotate(-135deg); }
+.lt-help-title { font: 600 13px/18px var(--font-sans); color: var(--brass); }
+.lt-help-text { color: var(--ink-muted); }
+.lt-help-enter-active { transition: opacity var(--duration-base) var(--ease-out), transform var(--duration-base) var(--ease-out); }
+.lt-help-leave-active { transition: opacity var(--duration-fast) linear; }
+.lt-help-enter-from { opacity: 0; transform: translateY(4px) scale(0.98); }
+.lt-help-bubble.is-bottom.lt-help-enter-from { transform: translateY(-4px) scale(0.98); }
+.lt-help-leave-to { opacity: 0; }
