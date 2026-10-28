@@ -1,0 +1,40 @@
+{
+  "name": "software-architecture-practice-frontend",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build",
+    "typecheck": "vue-tsc --noEmit -p tsconfig.json",
+    "lint": "eslint . --max-warnings 0",
+    "arch": "depcruise src --config .dependency-cruiser.cjs",
+    "test:unit": "vitest run",
+    "test:e2e": "playwright test",
+    "check": "npm run typecheck && npm run lint && npm run arch && npm run test:unit"
+  },
+  "dependencies": {
+    "@tanstack/vue-query": "5.104.2",
+    "decimal.js": "10.6.0",
+    "pinia": "4.1.0",
+    "vue": "3.5.44",
+    "vue-router": "5.4.0",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.1",
+    "@testing-library/vue": "8.1.0",
+    "@vitejs/plugin-vue": "6.0.10",
+    "@vue/test-utils": "2.5.1",
+    "dependency-cruiser": "18.7.0",
+    "eslint": "10.13.0",
+    "eslint-plugin-vue": "10.11.1",
+    "jsdom": "30.1.2",
+    "msw": "3.0.3",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "8.72.1",
+    "vite": "8.3.4",
+    "vitest": "5.0.5",
+    "vue-eslint-parser": "10.4.1",
+    "vue-tsc": "3.3.13"
+  }
+}

@@ -1,0 +1,9 @@
+.auth-form { width: 100%; max-width: 400px; display: grid; gap: var(--space-4); }
+.auth-form.lt-panel { padding: 32px 28px; }
+.auth-heading { display: grid; gap: var(--space-1); }
+.auth-heading p { margin: 0; }
+.auth-submit { width: 100%; }
+.auth-switch, .auth-note { margin: 0; font-size: 13px; }
+.auth-note { font-size: 12px; line-height: 16px; }
+.password-rules { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 12px; font-size: 12px; color: var(--ink-muted); }
+.password-rules .is-satisfied { color: var(--success); }

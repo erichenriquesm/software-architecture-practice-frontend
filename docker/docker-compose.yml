@@ -1,0 +1,52 @@
+# The web client in development: Vite with HMR on the platform network, served by the edge on http://127.0.0.1:8080.
+# Start the backend first (backend/: make up), then here: make up (or make watch for Compose Watch in the foreground).
+name: trading-frontend
+
+x-watch: &watch
+  watch:
+    - action: sync
+      path: ../src
+      target: /app/src
+    - action: sync
+      path: ../index.html
+      target: /app/index.html
+    - action: sync+restart
+      path: ../vite.config.ts
+      target: /app/vite.config.ts
+    - action: rebuild
+      path: ../package.json
+    - action: rebuild
+      path: ../package-lock.json
+
+services:
+  frontend:
+    build: { context: .., dockerfile: docker/Dockerfile, target: dev }
+    container_name: frontend
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:5173/"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks: [trading-net]
+    develop: *watch
+
+  tests:
+    build: { context: .., dockerfile: docker/Dockerfile, target: dev }
+    profiles: [tests]
+    command: ["npm", "run", "--silent", "check"]
+    network_mode: none
+
+  e2e:
+    image: mcr.microsoft.com/playwright:v1.64.1-noble
+    profiles: [tests]
+    working_dir: /app
+    volumes: [../:/app]
+    environment:
+      BASE_URL: http://edge
+    command: ["sh", "-c", "npx playwright test"]
+    networks: [trading-net]
+
+networks:
+  trading-net:
+    external: true

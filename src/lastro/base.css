@@ -1,0 +1,33 @@
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; }
+body { background: var(--ground); color: var(--ink); font: 400 14px/20px var(--font-sans); -webkit-font-smoothing: antialiased; }
+a { color: var(--ink); text-underline-offset: 3px; }
+a:hover { color: var(--brass); }
+:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.lt-num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.lt-eyebrow { font: 600 11px/14px var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-muted); }
+.lt-page-title { margin: 0; font: 700 28px/32px var(--font-display); letter-spacing: -0.01em; text-wrap: balance; }
+.lt-panel-title { margin: 0; font: 600 16px/24px var(--font-display); }
+.lt-muted { color: var(--ink-muted); }
+.lt-panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg); }
+.lt-visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+.lt-alert { display: grid; gap: 2px; padding: 10px 12px; border-radius: var(--radius-md); font-size: 13px; border: 1px solid var(--line-strong); }
+.lt-alert-title { font-weight: 600; }
+.lt-alert-detail { font-size: 12px; color: var(--ink-muted); }
+.lt-alert-danger { border-color: var(--danger); }
+.lt-alert-danger .lt-alert-title { color: var(--danger); }
+.lt-alert-warning { border-color: var(--brass); background: var(--brass-soft); }
+.lt-alert-warning .lt-alert-title { color: var(--brass); }
+
+.lt-text-field { display: grid; gap: var(--space-2); }
+.lt-text-field input { background: var(--surface); color: var(--ink); border: 1px solid var(--line-strong); border-radius: var(--radius-md); font: 400 14px/20px var(--font-sans); padding: 9px 12px; width: 100%; }
+.lt-text-field.has-error input { border-color: var(--danger); }
+.lt-text-field input:disabled { opacity: .45; cursor: not-allowed; }
+
+.lt-skeleton { background: var(--surface-raised); border-radius: var(--radius-sm); }
+@media (prefers-reduced-motion: no-preference) {
+  .lt-skeleton { animation: lt-pulse 1.4s ease-in-out infinite; }
+}
+@keyframes lt-pulse { 50% { opacity: .55; } }
+.lt-text-field.has-error .lt-field-hint { color: var(--danger); }
