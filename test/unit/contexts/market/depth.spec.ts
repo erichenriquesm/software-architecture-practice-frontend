@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { bestAsk, bestBid, cumulativeLevels, depthPrecisions, nearestLevels, sortBids, spreadOf } from '@/contexts/market/domain/depth';
-import { depthChartGeometry } from '@/contexts/market/domain/depthChart';
+import { depthChartGeometry, depthPriceAt, depthStepAt } from '@/contexts/market/domain/depthChart';
 
 const bids = [
   { price: '82900.00', quantity: '12.4' },
@@ -65,5 +65,41 @@ describe('Depth chart geometry', () => {
 
     expect(geometry.bidPoints).toBe('');
     expect(geometry.askPoints).toBe('350,190 350,10 640,10 640,190');
+  });
+
+  test('Should give the same shapes as paths: a closed area and the step line on top of it', () => {
+    const geometry = depthChartGeometry([], [{ price: '83100.00', quantity: '2' }], frame);
+
+    expect(geometry.askArea).toBe('M350,190 L350,10 L640,10 L640,190 Z');
+    expect(geometry.askLine).toBe('M350,10 L640,10');
+    expect(geometry.bidArea).toBe('');
+    expect(geometry.midPrice).toBeUndefined();
+  });
+
+  test('Should put the mid price on the boundary between the halves', () => {
+    const geometry = depthChartGeometry(bids, asks, frame);
+
+    expect(geometry.middle).toBe(340);
+    expect(geometry.midPrice).toBe('83050');
+  });
+
+  test('Should find the step under the pointer on each half, and the best level inside the gap', () => {
+    const geometry = depthChartGeometry(bids, asks, frame);
+
+    expect(depthStepAt(geometry, 300)).toMatchObject({ side: 'bid', price: '83000.00', cumulative: '5' });
+    expect(depthStepAt(geometry, 100)).toMatchObject({ side: 'bid', price: '82900.00', cumulative: '17.4' });
+    expect(depthStepAt(geometry, 335)).toMatchObject({ side: 'bid', price: '83000.00' });
+    expect(depthStepAt(geometry, 345)).toMatchObject({ side: 'ask', price: '83100.00', cumulative: '1.4' });
+    expect(depthStepAt(geometry, 640)).toMatchObject({ side: 'ask', price: '83400.00', cumulative: '7.5' });
+  });
+
+  test('Should turn a pointer x back into a price on the tick', () => {
+    const geometry = depthChartGeometry(bids, asks, frame);
+    const { bid, ask } = geometry.scales;
+
+    expect(depthPriceAt(ask!, 350, '0.01')).toBe('83100.00');
+    expect(depthPriceAt(ask!, 495, '0.01')).toBe('83250.00');
+    expect(depthPriceAt(bid!, 40, '0.01')).toBe('82400.00');
+    expect(depthPriceAt(bid!, 400, '0.01')).toBe('83000.00');
   });
 });

@@ -1,0 +1,88 @@
+/* Motion and depth. Everything here is decoration over a complete static page, and stops under reduced motion. */
+:root {
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+  --duration-slow: 320ms;
+  --duration-flash: 900ms;
+  --glow-brass: 0 0 0 1px color-mix(in srgb, var(--brass) 35%, transparent), 0 8px 32px -12px color-mix(in srgb, var(--brass) 45%, transparent);
+  --shadow-card: 0 1px 0 color-mix(in srgb, var(--ink) 4%, transparent) inset, 0 12px 32px -20px rgba(0, 0, 0, 0.6);
+}
+
+/* Ground: a faint brass glow at the top and a hairline grid, the trading floor under the panels */
+body {
+  background:
+    radial-gradient(1200px 480px at 50% -220px, color-mix(in srgb, var(--brass) 9%, transparent), transparent 70%),
+    linear-gradient(color-mix(in srgb, var(--line) 16%, transparent) 1px, transparent 1px) 0 0 / 100% 48px,
+    var(--ground);
+  background-attachment: fixed;
+}
+
+.lt-panel { box-shadow: var(--shadow-card); }
+
+/* A price tick: the cell lights in the side colour and fades back */
+@keyframes lt-flash-up { from { background-color: var(--bid-soft); color: var(--bid); } }
+@keyframes lt-flash-down { from { background-color: var(--ask-soft); color: var(--ask); } }
+.lt-flash-up { animation: lt-flash-up var(--duration-flash) var(--ease-out); }
+.lt-flash-down { animation: lt-flash-down var(--duration-flash) var(--ease-out); }
+
+/* New rows (trades, orders) slide in from the top */
+@keyframes lt-row-in { from { opacity: 0; transform: translateY(-6px); } }
+.lt-row-enter-active { animation: lt-row-in var(--duration-slow) var(--ease-out); }
+
+/* Route changes and panels appearing */
+@keyframes lt-rise { from { opacity: 0; transform: translateY(8px); } }
+.lt-page-enter-active { animation: lt-rise var(--duration-slow) var(--ease-out); }
+.lt-rise { animation: lt-rise var(--duration-slow) var(--ease-out) both; }
+.lt-rise-1 { animation-delay: 40ms; }
+.lt-rise-2 { animation-delay: 80ms; }
+.lt-rise-3 { animation-delay: 120ms; }
+.lt-rise-4 { animation-delay: 160ms; }
+
+/* Live dot: something is streaming */
+@keyframes lt-pulse-dot { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--success) 60%, transparent); } 70%, 100% { box-shadow: 0 0 0 6px transparent; } }
+.lt-live-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--success); animation: lt-pulse-dot 2s var(--ease-out) infinite; }
+
+/* Skeleton: a soft sheen travelling across */
+.lt-skeleton {
+  background: linear-gradient(90deg, var(--surface-raised) 0%, color-mix(in srgb, var(--surface-raised) 55%, var(--line-strong)) 50%, var(--surface-raised) 100%) 0 0 / 200% 100%;
+  animation: lt-sheen 1.4s linear infinite;
+}
+@keyframes lt-sheen { to { background-position: -200% 0; } }
+
+/* Buttons feel pressed; the primary action carries the brand glow */
+.lt-btn { transition: background-color var(--duration-fast), border-color var(--duration-fast), color var(--duration-fast), transform var(--duration-fast) var(--ease-out), box-shadow var(--duration-base); }
+.lt-btn:active:not(:disabled) { transform: translateY(1px) scale(0.99); }
+.lt-btn-primary:not(:disabled) { border-color: color-mix(in srgb, var(--brass) 55%, var(--line-strong)); }
+.lt-btn-primary:hover:not(:disabled) { box-shadow: var(--glow-brass); }
+.lt-btn-buy:hover:not(:disabled) { border-color: var(--bid); box-shadow: 0 8px 28px -14px var(--bid); }
+.lt-btn-sell:hover:not(:disabled) { border-color: var(--ask); box-shadow: 0 8px 28px -14px var(--ask); }
+.lt-btn.is-loading { position: relative; color: transparent; }
+.lt-btn.is-loading::after { content: ''; position: absolute; inset: 0; margin: auto; width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--ink-muted); border-top-color: var(--ink); animation: lt-spin 700ms linear infinite; }
+@keyframes lt-spin { to { transform: rotate(360deg); } }
+
+/* Side toggle: the active side is a pill that slides */
+.lt-sides { position: relative; isolation: isolate; }
+.lt-sides::before {
+  content: ''; position: absolute; z-index: -1; top: 2px; bottom: 2px; left: 2px; width: calc(50% - 3px);
+  border-radius: var(--radius-sm); background: var(--bid-soft); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--bid) 50%, transparent);
+  transition: transform var(--duration-base) var(--ease-out), background-color var(--duration-base), box-shadow var(--duration-base);
+}
+.lt-sides[data-side='sell']::before { transform: translateX(calc(100% + 2px)); background: var(--ask-soft); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ask) 50%, transparent); }
+.lt-sides .lt-side.is-active { background: transparent; box-shadow: none; }
+
+/* Inputs: focus glows instead of only changing the border */
+.lt-field-box, .lt-text-field input { transition: border-color var(--duration-fast), box-shadow var(--duration-base); }
+.lt-field-box:focus-within, .lt-text-field input:focus { border-color: var(--focus-ring); box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus-ring) 22%, transparent); outline: none; }
+
+/* Tables: rows answer the pointer */
+.lt-table tbody tr { transition: background-color var(--duration-fast); }
+.lt-table tbody tr:hover { background: color-mix(in srgb, var(--surface-raised) 70%, transparent); }
+
+/* Order book: depth bars grow and shrink instead of jumping */
+.lt-book-bar { transition: width var(--duration-slow) var(--ease-out); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 1ms !important; animation-iteration-count: 1 !important; transition-duration: 1ms !important; }
+}

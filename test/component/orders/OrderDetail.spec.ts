@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor } from '@testing-library/vue';
+import { fireEvent, screen, waitFor, within } from '@testing-library/vue';
 import { http, HttpResponse } from 'msw';
 import { describe, expect, test } from 'vitest';
 import { OrderDetail } from '@/contexts/orders';
@@ -25,10 +25,41 @@ describe('Order detail', () => {
     expect(screen.getByText('415.000,00 USD')).toBeTruthy();
 
     await fireEvent.click(screen.getByRole('button', { name: 'Cancelar o restante' }));
+    expect(screen.getByRole('dialog', { name: 'Cancelar o que falta executar?' })).toBeTruthy();
+    expect(cancelled).toBe(0);
+    await fireEvent.click(screen.getByRole('button', { name: 'Sim, cancelar' }));
 
     expect(await screen.findByText('Cancelamento pedido.')).toBeTruthy();
     expect(cancelled).toBe(1);
     expect(screen.queryByRole('button', { name: 'Cancelar o restante' })).toBeNull();
+  });
+
+  test('Should keep the order when the cancel confirmation is dismissed', async () => {
+    let cancelled = 0;
+    server.use(
+      http.get('/orders/o-3', () => HttpResponse.json(orderResponse('o-3'))),
+      http.post('/cancel_order', () => {
+        cancelled += 1;
+        return HttpResponse.json({ orderId: 'o-3', status: 'cancelling' }, { status: 202 });
+      }),
+    );
+    await renderWithApp(OrderDetail, { props: { orderId: 'o-3' }, provide: fastOrdersApi });
+
+    await fireEvent.click(await screen.findByRole('button', { name: 'Cancelar ordem' }));
+    await fireEvent.click(screen.getByRole('button', { name: 'Manter ordem' }));
+
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(cancelled).toBe(0);
+  });
+
+  test('Should show where the order is from its status alone', async () => {
+    server.use(http.get('/orders/o-4', () => HttpResponse.json(orderResponse('o-4', { status: 'open' }))));
+    await renderWithApp(OrderDetail, { props: { orderId: 'o-4' }, provide: fastOrdersApi });
+
+    const steps = within(await screen.findByRole('list', { name: 'Andamento da ordem' })).getAllByRole('listitem');
+
+    expect(steps.map((step) => step.textContent)).toEqual(['Recebida, Feito', 'Saldo reservado, Feito', 'No livro, Agora', 'Executada, A seguir']);
+    expect(steps[2]?.getAttribute('aria-current')).toBe('step');
   });
 
   test('Should explain why a rejected order ended', async () => {

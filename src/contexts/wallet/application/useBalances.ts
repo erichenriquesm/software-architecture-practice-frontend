@@ -28,5 +28,5 @@ export const useBalances = (accountId: MaybeRefOrGetter<string | undefined>) => 
   const balances = computed(() => query.data.value ?? []);
   const availableOf = (assetId: string): string => balances.value.find((balance) => balance.assetId === assetId)?.available ?? '0';
 
-  return { balances, availableOf, isLoading: query.isLoading, error: query.error };
+  return { balances, availableOf, isLoading: query.isLoading, error: query.error, refetch: () => query.refetch() };
 };

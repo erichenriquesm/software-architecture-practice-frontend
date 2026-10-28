@@ -1,6 +1,6 @@
 import { fireEvent, screen, within } from '@testing-library/vue';
 import { describe, expect, test } from 'vitest';
-import { DepthChart, OrderBookPanel, RecentTrades } from '@/contexts/market';
+import { DepthChart, MarketHeader, OrderBookPanel, RecentTrades } from '@/contexts/market';
 import { marketOf } from '@/entities/market';
 import { renderWithApp } from '../../support/renderWithApp';
 
@@ -15,19 +15,45 @@ const asks = [
 ];
 
 describe('Order book panel', () => {
-  test('Should render every level with its price and quantity, asks above the spread', async () => {
-    await renderWithApp(OrderBookPanel, { props: { market, bids, asks, spread: '100.00', precision: 2 } });
-
+  const rowsOf = () => {
     const rows = within(screen.getByRole('table', { name: 'Livro de ofertas' })).getAllByRole('row');
-    const cellsOf = (row: HTMLElement) => [...row.querySelectorAll('[role="cell"], [role="columnheader"]')].map((cell) => cell.textContent?.trim()).join(' ');
-    expect(rows.map(cellsOf)).toEqual([
-      'Preço (USD) Quantidade (BTC)',
-      '83.400,00 6,10000000',
-      '83.100,00 1,40000000',
-      'Spread 100,00',
-      '83.000,00 5,00000000',
-      '82.900,00 12,40000000',
+    const cellsOf = (row: HTMLElement) => [...row.querySelectorAll('[role="cell"], [role="columnheader"]')].map((cell) => cell.textContent?.replace(/\s+/g, ' ').trim()).join(' | ');
+    return rows.map(cellsOf);
+  };
+
+  test('Should render every level with its price and quantity, asks above the last price and the spread', async () => {
+    await renderWithApp(OrderBookPanel, { props: { market, bids, asks, spread: '100.00', lastPrice: '83050.00', precision: 2 } });
+
+    expect(rowsOf()).toEqual([
+      'Preço (USD) | Quantidade (BTC)',
+      '83.400,00 | 6,10000000',
+      '83.100,00 | 1,40000000',
+      '83.050,00 último preço | spread 100,00',
+      '83.000,00 | 5,00000000',
+      '82.900,00 | 12,40000000',
     ]);
+  });
+
+  test('Should hand a clicked price up so the page can put it in the ticket', async () => {
+    const { emitted } = await renderWithApp(OrderBookPanel, { props: { market, bids, asks, precision: 2 } });
+
+    await fireEvent.click(screen.getByRole('button', { name: 'Usar o preço 83.100,00' }));
+
+    expect(emitted().pick).toEqual([['83100.00']]);
+  });
+
+  test('Should show only one side of the book when asked, with the arrow keys moving between the views', async () => {
+    await renderWithApp(OrderBookPanel, { props: { market, bids, asks, precision: 2 } });
+    const views = screen.getByRole('radiogroup', { name: 'Lados do livro' });
+
+    await fireEvent.click(within(views).getByRole('radio', { name: 'Só compras' }));
+    expect(rowsOf().filter((row) => row.includes('83.400,00') || row.includes('83.100,00'))).toEqual([]);
+    expect(rowsOf()).toContain('83.000,00 | 5,00000000');
+
+    await fireEvent.keyDown(views, { key: 'ArrowRight' });
+    expect(within(views).getByRole('radio', { name: 'Só vendas' }).getAttribute('aria-checked')).toBe('true');
+    expect(rowsOf()).toContain('83.100,00 | 1,40000000');
+    expect(rowsOf().some((row) => row.includes('82.900,00'))).toBe(false);
   });
 
   test('Should let the user change the price grouping', async () => {
@@ -66,5 +92,27 @@ describe('Recent trades', () => {
 
     const cells = within(screen.getAllByRole('row')[1]!).getAllByRole('cell');
     expect(cells.slice(1).map((cell) => cell.textContent?.trim())).toEqual(['▼ Venda', '83.000,00', '5,00000000']);
+  });
+
+  test('Should say a trade happened just now instead of the clock time', async () => {
+    const trades = [{ tradeId: 't-1', side: 'buy', price: '83000.00', quantity: '1.00000000', timestamp: new Date().toISOString() }];
+    await renderWithApp(RecentTrades, { props: { market, trades } });
+
+    expect(within(screen.getAllByRole('row')[1]!).getAllByRole('cell')[0]?.textContent?.trim()).toBe('agora');
+  });
+});
+
+describe('Market header', () => {
+  test('Should show the last price, the 24 h volume in the quote asset and the trend of the recent trades', async () => {
+    const trades = [
+      { tradeId: 't-2', side: 'buy', price: '84000.00', quantity: '0.1', timestamp: '2026-10-28T14:02:41.000Z' },
+      { tradeId: 't-1', side: 'sell', price: '80000.00', quantity: '0.1', timestamp: '2026-10-28T14:01:41.000Z' },
+    ];
+    await renderWithApp(MarketHeader, { props: { market, lastPrice: '84000.00', trades, summary: { min: '80000.00', max: '84000.00', volume: '16400.00' } } });
+
+    expect(screen.getByText(/Último preço 84\.000,00 USD/)).toBeTruthy();
+    expect(screen.getByText('Volume 24h').nextElementSibling?.textContent?.replace(/\s+/g, ' ').trim()).toBe('16.400,00 USD');
+    expect(screen.getByText('+5,00%')).toBeTruthy();
+    expect(screen.getByText('nas últimas 2 negociações')).toBeTruthy();
   });
 });

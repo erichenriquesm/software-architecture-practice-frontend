@@ -1,6 +1,8 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/vue';
 import { http, HttpResponse } from 'msw';
 import { describe, expect, test } from 'vitest';
+import { defineComponent, h, ref } from 'vue';
+import { OrderBookPanel } from '@/contexts/market';
 import { OrderTicket, orderTicketApiKey } from '@/contexts/orderTicket';
 import { createOrderTicketApi } from '@/contexts/orderTicket/infra/orderTicket.api';
 import { marketOf } from '@/entities/market';
@@ -37,6 +39,7 @@ describe('Order ticket', () => {
     expect(screen.getByText('Fica reservado').nextElementSibling?.textContent).toBe('41.500,00 USD');
     expect(screen.getByText('Disponível: 59.100,00 USD')).toBeTruthy();
     expect(screen.getByText('Melhor venda: 83.100,00')).toBeTruthy();
+    expect(screen.getByText('Usa 70% do disponível')).toBeTruthy();
 
     await fireEvent.click(screen.getByRole('radio', { name: 'Venda' }));
 
@@ -174,5 +177,73 @@ describe('Order ticket', () => {
     await fireEvent.click(within(dialog).getByRole('button', { name: 'Comprar BTC' }));
 
     expect((await screen.findByRole('alert')).textContent).toContain('O envio de ordens está indisponível agora.');
+  });
+
+  test('Should fill the quantity from a share of the free balance, rounded down to the step', async () => {
+    // Given
+    await renderTicket({ USD: '6792.50', BTC: '1.25' });
+    const shares = screen.getByRole('group', { name: 'Preencher com parte do disponível' });
+    expect((within(shares).getByRole('button', { name: '50%' }) as HTMLButtonElement).disabled).toBe(true);
+
+    // When
+    await fireEvent.update(screen.getByLabelText('Preço limite'), '83000,00');
+    await fireEvent.click(within(shares).getByRole('button', { name: '50%' }));
+
+    // Then
+    expect((screen.getByLabelText('Quantidade') as HTMLInputElement).value).toBe('0,04091');
+    expect(within(shares).getByRole('button', { name: '50%' }).getAttribute('aria-pressed')).toBe('true');
+    expect(screen.getByText('Usa 50% do disponível')).toBeTruthy();
+
+    await fireEvent.click(screen.getByRole('radio', { name: 'Venda' }));
+    await fireEvent.click(within(shares).getByRole('button', { name: 'Máx' }));
+
+    expect((screen.getByLabelText('Quantidade') as HTMLInputElement).value).toBe('1,25000');
+    expect(screen.getByText('Usa 100% do disponível')).toBeTruthy();
+  });
+
+  test('Should warn on the usage bar when the order needs more than is free', async () => {
+    await renderTicket({ USD: '17600.00', BTC: '0' });
+
+    await fillOrder('83000,00', '0,5');
+
+    expect(screen.getByText('Acima do disponível')).toBeTruthy();
+  });
+
+  test('Should use the best price of the other side with one click', async () => {
+    await renderTicket();
+
+    await fireEvent.click(screen.getByRole('button', { name: 'Usar melhor preço' }));
+    expect((screen.getByLabelText('Preço limite') as HTMLInputElement).value).toBe('83.100,00');
+
+    await fireEvent.click(screen.getByRole('radio', { name: 'Venda' }));
+    await fireEvent.click(screen.getByRole('button', { name: 'Usar melhor preço' }));
+    expect((screen.getByLabelText('Preço limite') as HTMLInputElement).value).toBe('83.000,00');
+  });
+
+  test('Should take a price clicked in the order book as the limit price, as the market page wires them', async () => {
+    // Given: the same wiring as the market page, the book's pick goes to the ticket's setPrice
+    const Market = defineComponent({
+      setup() {
+        const ticket = ref<InstanceType<typeof OrderTicket>>();
+        return () => [
+          h(OrderBookPanel, {
+            market,
+            precision: 2,
+            bids: [{ price: '83000.00', quantity: '5' }],
+            asks: [{ price: '83100.00', quantity: '1.4' }],
+            onPick: (price: string) => ticket.value?.setPrice(price),
+          }),
+          h(OrderTicket, { ref: ticket, market, available: { USD: '59100.00', BTC: '1.25' } }),
+        ];
+      },
+    });
+    await renderWithApp(Market, { provide: { [orderTicketApiKey as symbol]: api } });
+
+    // When
+    await fireEvent.click(screen.getByRole('button', { name: 'Usar o preço 83.000,00' }));
+
+    // Then
+    expect((screen.getByLabelText('Preço limite') as HTMLInputElement).value).toBe('83.000,00');
+    expect(screen.getByText('Preço limite 83.000,00 USD')).toBeTruthy();
   });
 });

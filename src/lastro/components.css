@@ -79,3 +79,24 @@
 .lt-empty-title { margin: 0; font: 600 16px/24px var(--font-display); }
 
 @media (prefers-reduced-motion: reduce) { .lt-btn, .lt-side { transition: none; } }
+
+/* Order book, interactive */
+.lt-book { max-width: none; }
+.lt-book-row { transition: background-color var(--duration-fast); }
+.lt-book-row.is-in-range { background: color-mix(in srgb, var(--surface-raised) 80%, transparent); }
+.lt-book-row.is-in-range .lt-book-bar { filter: saturate(1.6) brightness(1.25); }
+.lt-book-cell { position: relative; display: flex; }
+.lt-book-pick { all: unset; cursor: pointer; font: inherit; border-radius: var(--radius-sm); padding: 0 2px; margin: 0 -2px; }
+.lt-book-pick:hover { text-decoration: underline; text-underline-offset: 3px; }
+.lt-book-pick:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 1px; }
+.lt-book-ask .lt-book-pick { color: var(--ask); }
+.lt-book-bid .lt-book-pick { color: var(--bid); }
+.lt-book-mid { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: var(--space-3); padding: 8px var(--space-3); border-block: 1px solid var(--line); background: var(--surface-raised); }
+.lt-book-last { display: grid; gap: 1px; }
+.lt-book-last-price { font: 500 18px/24px var(--font-mono); font-variant-numeric: tabular-nums; border-radius: var(--radius-sm); padding: 0 4px; margin: 0 -4px; justify-self: start; }
+.lt-book-last-price.is-up { color: var(--bid); }
+.lt-book-last-price.is-down { color: var(--ask); }
+.lt-book-mid-label { font: 600 10px/12px var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-muted); }
+.lt-book-spread-cell { display: grid; justify-items: end; gap: 1px; }
+.lt-book-readout { display: flex; flex-wrap: wrap; gap: 4px 14px; min-height: 40px; align-items: center; padding: 8px var(--space-3); border-top: 1px solid var(--line); font: 400 12px/16px var(--font-mono); font-variant-numeric: tabular-nums; }
+.lt-book-readout .lt-book-mid-label { margin-right: 4px; font-family: var(--font-sans); }

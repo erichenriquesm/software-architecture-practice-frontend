@@ -1,6 +1,7 @@
 import './tokens.css';
 import './base.css';
 import './components.css';
+import './motion.css';
 
 export { default as LtAlert } from './components/LtAlert.vue';
 export { default as LtAmountField } from './components/LtAmountField.vue';
@@ -17,3 +18,5 @@ export { default as LtStatusBadge } from './components/LtStatusBadge.vue';
 export type { LtOrderStatus } from './components/LtStatusBadge.vue';
 export { default as LtTextField } from './components/LtTextField.vue';
 export { decimalsOfAsset, formatDecimal } from './format';
+export { useFlash } from './motion/useFlash';
+export type { FlashDirection } from './motion/useFlash';

@@ -1,13 +1,17 @@
 import { useMutation, useQuery } from '@tanstack/vue-query';
+import { Decimal } from 'decimal.js';
 import { computed, ref, toValue } from 'vue';
 import type { MaybeRefOrGetter } from 'vue';
 import type { Market } from '@/entities/market';
 import type { Side } from '@/entities/order';
+import { decimalPattern, decimalPlaces, normalizeTypedDecimal } from '@/entities/decimal';
 import { isApiError, isRetryable } from '@/shared/api/apiError';
 import { newIdempotencyKey } from '@/shared/api/idempotency';
+import { formatDecimal } from '@/shared/format/decimal';
 import { useForm } from '@/shared/forms/useForm';
 import { intentFor } from '../domain/intent';
 import type { OrderIntent } from '../domain/intent';
+import { balanceUse, quantityForShare, shares } from '../domain/share';
 import { createTicketSchema, orderTotal, reservationOf } from '../domain/ticket';
 import type { TicketFields, TicketOrder, TicketValues } from '../domain/ticket';
 import { useOrderTicketApi } from './orderTicketApiProvider';
@@ -75,6 +79,34 @@ export const useOrderTicket = (input: OrderTicketInput) => {
   });
 
   const blocked = computed(() => countdown.secondsLeft.value > 0);
+  const availableForSide = computed(() => availableOf(form.values.side === 'buy' ? market.quote : market.base));
+  const reservation = computed(() => reservationOf(market, form.values.side, form.values.price, form.values.quantity));
+
+  /** A price chosen elsewhere (the book, the best price) lands in the field as the user would have typed it. */
+  const applyPrice = (price: string) => {
+    form.values.price = formatDecimal(price, decimalPlaces(market.tickSize));
+    form.touch('price');
+  };
+
+  const quantityFor = (share: string) => quantityForShare(market, form.values.side, share, availableForSide.value, form.values.price);
+
+  /** Fills the quantity that spends this share of the free balance; does nothing while it cannot be known. */
+  const fillShare = (share: string) => {
+    const quantity = quantityFor(share);
+    if (quantity === undefined) return;
+    form.values.quantity = formatDecimal(quantity, decimalPlaces(market.stepSize));
+    form.touch('quantity');
+  };
+
+  /** The chip matching what is in the quantity field, so it reads as pressed. */
+  const activeShare = computed(() => {
+    const typed = normalizeTypedDecimal(form.values.quantity);
+    if (!decimalPattern.test(typed) || new Decimal(typed).isZero()) return undefined;
+    return shares.find((share) => {
+      const quantity = quantityFor(share.value);
+      return quantity !== undefined && new Decimal(quantity).equals(typed);
+    })?.value;
+  });
 
   const review = () => {
     if (blocked.value || mutation.isPending.value) return;
@@ -117,8 +149,11 @@ export const useOrderTicket = (input: OrderTicketInput) => {
     draft,
     placed,
     total: computed(() => orderTotal(form.values.price, form.values.quantity)),
-    reservation: computed(() => reservationOf(market, form.values.side, form.values.price, form.values.quantity)),
-    availableForSide: computed(() => availableOf(form.values.side === 'buy' ? market.quote : market.base)),
+    reservation,
+    availableForSide,
+    balanceUse: computed(() => balanceUse(reservation.value?.amount, availableForSide.value)),
+    canFillShares: computed(() => quantityFor('1') !== undefined),
+    activeShare,
     pending: mutation.isPending,
     blocked,
     secondsLeft: countdown.secondsLeft,
@@ -128,5 +163,7 @@ export const useOrderTicket = (input: OrderTicketInput) => {
     review,
     back,
     confirm,
+    applyPrice,
+    fillShare,
   };
 };

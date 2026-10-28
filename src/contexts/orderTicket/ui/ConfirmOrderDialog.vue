@@ -46,7 +46,7 @@ onMounted(() => dialog.value?.focus());
   <div class="ticket-overlay" @click.self="cancel">
     <section
       ref="dialog"
-      class="lt-panel ticket-dialog"
+      :class="['lt-panel', 'ticket-dialog', buying ? 'is-buy' : 'is-sell']"
       role="dialog"
       aria-modal="true"
       aria-labelledby="confirm-title"
@@ -56,28 +56,31 @@ onMounted(() => dialog.value?.focus());
       @keydown.tab="keepFocusInside"
     >
       <div class="ticket-dialog-heading">
+        <p class="lt-eyebrow">Revisão · {{ props.market.marketId }}</p>
         <h2 id="confirm-title" class="ticket-dialog-title">{{ buying ? 'Confirmar compra' : 'Confirmar venda' }}</h2>
         <p id="confirm-desc" class="lt-muted ticket-dialog-desc">Revise antes de enviar. A ordem entra no livro e pode ser executada na hora.</p>
       </div>
 
-      <dl class="ticket-summary">
-        <dt>Mercado</dt>
-        <dd class="lt-num">{{ props.market.marketId }}</dd>
-        <dt>Operação</dt>
-        <dd :class="buying ? 'ticket-side-buy' : 'ticket-side-sell'"><span aria-hidden="true">{{ buying ? '▲' : '▼' }}</span> {{ buying ? 'Compra limitada' : 'Venda limitada' }}</dd>
-        <dt>Preço limite</dt>
-        <dd class="lt-num">{{ formatAsset(props.order.price, props.market.quote) }}</dd>
-        <dt>Quantidade</dt>
-        <dd class="lt-num">{{ formatAsset(props.order.quantity, props.market.base) }}</dd>
-        <dt class="ticket-summary-total">Fica reservado</dt>
-        <dd class="lt-num ticket-summary-total">{{ props.reservation ? formatAsset(props.reservation.amount, props.reservation.assetId) : '–' }}</dd>
-      </dl>
+      <div class="ticket-receipt">
+        <dl class="ticket-summary">
+          <dt>Mercado</dt>
+          <dd class="lt-num">{{ props.market.marketId }}</dd>
+          <dt>Operação</dt>
+          <dd :class="buying ? 'ticket-side-buy' : 'ticket-side-sell'"><span aria-hidden="true">{{ buying ? '▲' : '▼' }}</span> {{ buying ? 'Compra limitada' : 'Venda limitada' }}</dd>
+          <dt>Preço limite</dt>
+          <dd class="lt-num">{{ formatAsset(props.order.price, props.market.quote) }}</dd>
+          <dt>Quantidade</dt>
+          <dd class="lt-num">{{ formatAsset(props.order.quantity, props.market.base) }}</dd>
+          <dt class="ticket-summary-total">Fica reservado</dt>
+          <dd class="lt-num ticket-summary-total">{{ props.reservation ? formatAsset(props.reservation.amount, props.reservation.assetId) : '–' }}</dd>
+        </dl>
+      </div>
 
       <p class="lt-muted ticket-note">{{ consequence }}</p>
 
       <div class="ticket-dialog-actions">
         <LtButton variant="secondary" :disabled="props.pending" @click="cancel">Voltar</LtButton>
-        <LtButton :variant="props.order.side" :loading="props.pending" @click="emit('confirm')">{{ buying ? 'Comprar' : 'Vender' }} {{ props.market.base }}</LtButton>
+        <LtButton :variant="props.order.side" class="ticket-confirm" :loading="props.pending" @click="emit('confirm')">{{ buying ? 'Comprar' : 'Vender' }} {{ props.market.base }}</LtButton>
       </div>
     </section>
   </div>

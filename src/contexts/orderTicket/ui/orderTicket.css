@@ -1,31 +1,98 @@
-.ticket { padding: var(--space-4); display: grid; gap: var(--space-4); align-content: start; min-width: 0; }
+/* The ticket takes the colour of the chosen side: a hairline on top, the usage bar and the submit glow follow it */
+.ticket { --side: var(--bid); --side-soft: var(--bid-soft); position: relative; padding: var(--space-4); display: grid; gap: var(--space-4); align-content: start; min-width: 0; overflow: hidden; }
+.ticket.is-sell { --side: var(--ask); --side-soft: var(--ask-soft); }
+.ticket::before {
+  content: ''; position: absolute; inset: 0 0 auto; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--side) 30%, var(--side) 70%, transparent);
+  opacity: .8; transition: background var(--duration-slow) var(--ease-out);
+}
+.ticket-head { display: grid; gap: 2px; }
+.ticket-head .lt-eyebrow { margin: 0; }
 .ticket-form { display: grid; gap: var(--space-4); }
 .ticket-sides { width: 100%; min-width: 0; }
+
+.ticket-price-group, .ticket-quantity-group { display: grid; gap: var(--space-2); }
+@keyframes ticket-picked { from { box-shadow: 0 0 0 3px var(--brass-soft); border-color: var(--brass); background-color: var(--brass-soft); } }
+.ticket-price.is-picked .lt-field-box { animation: ticket-picked var(--duration-flash) var(--ease-out); }
+.ticket-best { margin: 0; display: flex; justify-content: space-between; align-items: center; gap: var(--space-2); font-size: 12px; line-height: 16px; color: var(--ink-muted); }
+.ticket-link {
+  font: 600 12px/16px var(--font-sans); color: var(--brass); background: none; border: 0; padding: 2px 4px; margin: -2px -4px; border-radius: var(--radius-sm); cursor: pointer;
+  transition: background-color var(--duration-fast), color var(--duration-fast);
+}
+.ticket-link:hover { background: var(--brass-soft); }
+
+.ticket-shares { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-1); }
+.ticket-share {
+  font: 500 12px/16px var(--font-mono); padding: 5px 0; color: var(--ink-muted); background: var(--surface-raised); border: 1px solid var(--line); border-radius: var(--radius-sm); cursor: pointer;
+  transition: color var(--duration-fast), border-color var(--duration-fast), background-color var(--duration-fast), transform var(--duration-fast) var(--ease-out);
+}
+.ticket-share:hover:not(:disabled) { color: var(--ink); border-color: var(--line-strong); }
+.ticket-share:active:not(:disabled) { transform: translateY(1px); }
+.ticket-share.is-active { color: var(--side); border-color: color-mix(in srgb, var(--side) 55%, transparent); background: var(--side-soft); }
+.ticket-share:disabled { opacity: .45; cursor: not-allowed; }
+
+.ticket-usage { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: var(--space-3); font-size: 11px; line-height: 14px; color: var(--ink-muted); }
+.ticket-usage-track { position: relative; height: 3px; border-radius: 3px; background: var(--surface-raised); overflow: hidden; }
+.ticket-usage-fill {
+  position: absolute; inset: 0 auto 0 0; border-radius: inherit; background: var(--side); box-shadow: 0 0 8px var(--side);
+  transition: width var(--duration-slow) var(--ease-out), background-color var(--duration-base);
+}
+.ticket-usage.is-over .ticket-usage-fill { background: var(--danger); box-shadow: 0 0 8px var(--danger); }
+.ticket-usage.is-over .ticket-usage-label { color: var(--danger); }
+
 .ticket-totals { margin: 0; display: grid; gap: 6px; padding: var(--space-3); background: var(--surface-raised); border-radius: var(--radius-md); font-size: 13px; }
 .ticket-totals div { display: flex; justify-content: space-between; gap: var(--space-3); }
 .ticket-totals dt { color: var(--ink-muted); }
 .ticket-totals dd { margin: 0; text-align: right; }
-.ticket-submit { width: 100%; justify-content: center; }
+
+/* The one loud element: the submit carries the side colour */
+.ticket-submit { width: 100%; justify-content: center; padding-block: 11px; }
+.ticket-submit:not(:disabled), .ticket-confirm:not(:disabled) {
+  background: color-mix(in srgb, var(--side, var(--bid)) 16%, var(--control)); border-color: color-mix(in srgb, var(--side, var(--bid)) 60%, var(--line-strong));
+  box-shadow: 0 10px 28px -18px var(--side, var(--bid));
+}
+.ticket-submit:hover:not(:disabled), .ticket-confirm:hover:not(:disabled) { background: color-mix(in srgb, var(--side, var(--bid)) 24%, var(--control)); box-shadow: 0 12px 32px -14px var(--side, var(--bid)); }
+.ticket-submit .lt-btn-mark, .ticket-confirm .lt-btn-mark { color: var(--side, var(--bid)); }
 .ticket-note { margin: 0; font-size: 12px; line-height: 16px; }
-.ticket-placed { display: grid; grid-template-columns: auto 1fr auto; gap: var(--space-3); align-items: start; padding: var(--space-3) 14px; background: var(--surface-raised); border: 1px solid var(--line-strong); border-radius: var(--radius-lg); font-size: 13px; }
-.ticket-placed-mark { color: var(--success); }
+
+.ticket-placed { display: grid; grid-template-columns: auto 1fr auto; gap: var(--space-3); align-items: start; padding: var(--space-3) 14px; background: var(--surface-raised); border: 1px solid color-mix(in srgb, var(--success) 45%, var(--line)); border-radius: var(--radius-lg); font-size: 13px; box-shadow: 0 10px 30px -20px var(--success); }
+.ticket-placed-mark { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; color: var(--success); background: color-mix(in srgb, var(--success) 16%, transparent); font-size: 11px; }
 .ticket-placed-text { display: grid; gap: 2px; }
 .ticket-placed-text strong { font-weight: 600; }
 .ticket-placed-text .lt-muted, .ticket-placed a { font-size: 12px; }
+.ticket-toast-enter-active { transition: opacity var(--duration-slow) var(--ease-out), transform var(--duration-slow) var(--ease-out); }
+.ticket-toast-leave-active { transition: opacity var(--duration-fast) linear; }
+.ticket-toast-enter-from { opacity: 0; transform: translateY(10px) scale(.98); }
+.ticket-toast-leave-to { opacity: 0; }
 
-.ticket-overlay { position: fixed; inset: 0; z-index: 10; display: grid; place-items: center; padding: var(--space-4); background: color-mix(in srgb, var(--ground) 72%, transparent); }
-.ticket-dialog { width: 100%; max-width: 440px; display: grid; gap: 20px; padding: var(--space-6); box-shadow: var(--shadow-overlay); }
+/* Confirmation: the page blurs behind, the dialog scales in, the summary reads like a receipt */
+.ticket-overlay {
+  position: fixed; inset: 0; z-index: 30; display: grid; place-items: center; padding: var(--space-4);
+  background: color-mix(in srgb, var(--ground) 62%, transparent); backdrop-filter: blur(6px) saturate(1.2);
+}
+.ticket-dialog { --side: var(--bid); position: relative; width: 100%; max-width: 440px; display: grid; gap: 20px; padding: var(--space-6); box-shadow: var(--shadow-overlay), 0 0 0 1px color-mix(in srgb, var(--side) 22%, transparent); overflow: hidden; }
+.ticket-dialog.is-sell { --side: var(--ask); }
+.ticket-dialog::before { content: ''; position: absolute; inset: 0 0 auto; height: 2px; background: linear-gradient(90deg, transparent, var(--side), transparent); }
 .ticket-dialog:focus { outline: none; }
 .ticket-dialog:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
 .ticket-dialog-heading { display: grid; gap: var(--space-1); }
+.ticket-dialog-heading .lt-eyebrow { margin: 0; }
 .ticket-dialog-title { margin: 0; font: 700 20px/28px var(--font-display); }
 .ticket-dialog-desc { margin: 0; font-size: 13px; }
-.ticket-summary { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 10px var(--space-4); font-size: 13px; padding: var(--space-4); background: var(--surface-raised); border-radius: var(--radius-md); }
+.ticket-dialog-enter-active { transition: opacity var(--duration-base) var(--ease-out); }
+.ticket-dialog-enter-active .ticket-dialog { animation: ticket-dialog-in var(--duration-slow) var(--ease-out); }
+.ticket-dialog-leave-active { transition: opacity var(--duration-fast) linear; }
+.ticket-dialog-enter-from, .ticket-dialog-leave-to { opacity: 0; }
+@keyframes ticket-dialog-in { from { opacity: 0; transform: translateY(8px) scale(.96); } }
+
+.ticket-receipt { position: relative; padding: var(--space-4); background: var(--surface-raised); border-radius: var(--radius-md); border: 1px dashed var(--line-strong); }
+.ticket-summary { margin: 0; display: grid; grid-template-columns: auto 1fr; row-gap: 10px; font-size: 13px; }
+.ticket-summary dd { padding-left: var(--space-4); }
 .ticket-summary dt { color: var(--ink-muted); }
 .ticket-summary dd { margin: 0; text-align: right; }
-.ticket-summary .ticket-summary-total { border-top: 1px solid var(--line); padding-top: 10px; }
+.ticket-summary .ticket-summary-total { border-top: 1px dashed var(--line-strong); padding-top: 12px; margin-top: 2px; }
 .ticket-summary dt.ticket-summary-total { color: var(--ink); font-weight: 600; }
-.ticket-summary dd.ticket-summary-total { font-weight: 500; }
+.ticket-summary dd.ticket-summary-total { font-size: 15px; font-weight: 600; }
 .ticket-side-buy { color: var(--bid); font-weight: 600; }
 .ticket-side-sell { color: var(--ask); font-weight: 600; }
 .ticket-dialog-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: var(--space-2); }

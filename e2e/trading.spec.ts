@@ -19,11 +19,11 @@ test('Should sign in, see the market, deposit, find the orders and sign out', as
   await page.getByRole('button', { name: 'Depositar USD' }).click();
   await expect(page.getByRole('status').filter({ hasText: /1,25/ })).toBeVisible();
 
-  await page.getByRole('link', { name: 'Mercado' }).click();
+  await page.getByRole('link', { name: 'Mercado', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Livro de ofertas' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Nova ordem limitada' })).toBeVisible();
 
-  await page.getByRole('link', { name: 'Ordens' }).click();
+  await page.getByRole('link', { name: 'Ordens', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Minhas ordens' })).toBeVisible();
 
   await page.getByRole('button', { name: 'Sair' }).click();

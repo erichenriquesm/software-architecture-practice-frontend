@@ -39,28 +39,64 @@ describe('Orders table', () => {
     await renderWithApp(OrdersTable, { props: { accountId }, provide: fastOrdersApi });
     await screen.findByText('Parcial');
 
-    await fireEvent.click(screen.getByRole('button', { name: 'Abertas' }));
+    await fireEvent.click(screen.getByRole('button', { name: /^Abertas/ }));
     expect(rows()).toHaveLength(2);
-    expect(screen.getByRole('button', { name: 'Abertas' }).getAttribute('aria-pressed')).toBe('true');
-    expect(screen.getByRole('button', { name: 'Todas' }).getAttribute('aria-pressed')).toBe('false');
+    expect(screen.getByRole('button', { name: /^Abertas/ }).getAttribute('aria-pressed')).toBe('true');
+    expect(screen.getByRole('button', { name: /^Todas/ }).getAttribute('aria-pressed')).toBe('false');
 
-    await fireEvent.click(screen.getByRole('button', { name: 'Canceladas e rejeitadas' }));
+    await fireEvent.click(screen.getByRole('button', { name: /^Canceladas e rejeitadas/ }));
     expect(rows()).toHaveLength(1);
     expect(screen.getByText('Rejeitada')).toBeTruthy();
 
-    await fireEvent.click(screen.getByRole('button', { name: 'Executadas' }));
+    await fireEvent.click(screen.getByRole('button', { name: /^Executadas/ }));
     expect(rows()).toHaveLength(1);
   });
 
-  test('Should say there is nothing in a filter', async () => {
+  test('Should count the orders of each filter on its chip', async () => {
+    serveOrders(() => [open, partial, filled, rejected]);
+    await renderWithApp(OrdersTable, { props: { accountId }, provide: fastOrdersApi });
+    await screen.findByText('Parcial');
+
+    expect(screen.getByRole('button', { name: /^Todas\s*, 4 ordens$/ })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /^Abertas\s*, 2 ordens$/ })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /^Executadas\s*, 1 ordem$/ })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /^Canceladas e rejeitadas\s*, 1 ordem$/ })).toBeTruthy();
+  });
+
+  test('Should say there is nothing in a filter and offer to show every order again', async () => {
     serveOrders(() => [filled]);
     await renderWithApp(OrdersTable, { props: { accountId }, provide: fastOrdersApi });
     await screen.findByText('Executada');
 
-    await fireEvent.click(screen.getByRole('button', { name: 'Abertas' }));
+    await fireEvent.click(screen.getByRole('button', { name: /^Abertas/ }));
 
     expect(screen.getByText('Nenhuma ordem com esse status')).toBeTruthy();
     expect(screen.queryByRole('table')).toBeNull();
+
+    await fireEvent.click(screen.getByRole('button', { name: 'Ver todas as ordens' }));
+
+    expect(rows()).toHaveLength(1);
+    expect(screen.getByRole('button', { name: /^Todas/ }).getAttribute('aria-pressed')).toBe('true');
+  });
+
+  test('Should point a new account to the market', async () => {
+    serveOrders(() => []);
+    await renderWithApp(OrdersTable, { props: { accountId }, provide: fastOrdersApi });
+
+    expect(await screen.findByText('Nenhuma ordem ainda')).toBeTruthy();
+    await waitFor(() => expect(screen.getByRole('link', { name: 'Ir para o mercado' }).getAttribute('href')).toBe('/'));
+  });
+
+  test('Should offer to retry when the list cannot be loaded', async () => {
+    let fail = true;
+    server.use(http.get(`/accounts/${accountId}/orders`, () => (fail ? HttpResponse.json({ error: 'orderServiceUnavailable' }, { status: 503 }) : HttpResponse.json([open]))));
+    await renderWithApp(OrdersTable, { props: { accountId }, provide: fastOrdersApi });
+
+    expect((await screen.findByRole('alert')).textContent).toContain('Não foi possível carregar as ordens.');
+    fail = false;
+    await fireEvent.click(screen.getByRole('button', { name: 'Tentar de novo' }));
+
+    expect(await screen.findByText('Aberta')).toBeTruthy();
   });
 
   test('Should cancel an order with an Idempotency-Key and show the new status', async () => {

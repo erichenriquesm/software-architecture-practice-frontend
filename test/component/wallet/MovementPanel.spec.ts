@@ -133,4 +133,36 @@ describe('Movement panel', () => {
     expect(alert.textContent).toContain('Saldo insuficiente para este saque.');
     expect(alert.textContent).toContain('Valores reservados em ordens abertas não podem ser sacados.');
   });
+
+  test('Should fill the amount from a quick chip and send it', async () => {
+    serveAccount(() => balances);
+    const deposits = recordKeys('/deposit', [noContent]);
+    await renderWithApp(MovementPanel, { props: { accountId }, provide: fastWalletApi });
+
+    await fireEvent.click(screen.getByRole('button', { name: '1.000 USD' }));
+    expect((screen.getByLabelText('Quantidade') as HTMLInputElement).value).toBe('1.000,00');
+    expect(screen.getByRole('button', { name: '1.000 USD' }).getAttribute('aria-pressed')).toBe('true');
+
+    await fireEvent.update(screen.getByLabelText('Ativo'), 'BTC');
+    await fireEvent.click(screen.getByRole('button', { name: '0,05 BTC' }));
+    await fireEvent.click(screen.getByRole('button', { name: 'Depositar BTC' }));
+
+    await screen.findByRole('status');
+    expect(deposits.bodies).toEqual([{ assetId: 'BTC', quantity: '0.05000000' }]);
+  });
+
+  test('Should withdraw the whole available balance with Máx', async () => {
+    serveAccount(() => balances);
+    const withdraws = recordKeys('/withdraw', [noContent]);
+    await renderWithApp(MovementPanel, { props: { accountId }, provide: fastWalletApi });
+    expect(screen.queryByRole('button', { name: /^Sacar tudo/ })).toBeNull();
+
+    await fireEvent.click(screen.getByRole('tab', { name: 'Sacar' }));
+    await fireEvent.click(await screen.findByRole('button', { name: 'Sacar tudo: 17.600,00 USD' }));
+    expect((screen.getByLabelText('Quantidade') as HTMLInputElement).value).toBe('17.600,00');
+    await fireEvent.click(screen.getByRole('button', { name: 'Sacar USD' }));
+
+    await screen.findByRole('status');
+    expect(withdraws.bodies).toEqual([{ assetId: 'USD', quantity: '17600.00' }]);
+  });
 });

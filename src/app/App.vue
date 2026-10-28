@@ -10,6 +10,10 @@ const showHeader = computed(() => route.meta.access === 'signedIn');
 <template>
   <div class="app-shell">
     <AppHeader v-if="showHeader" />
-    <RouterView />
+    <RouterView v-slot="{ Component, route: current }">
+      <Transition name="lt-page" :duration="{ enter: 320, leave: 0 }">
+        <component :is="Component" :key="current.path" />
+      </Transition>
+    </RouterView>
   </div>
 </template>

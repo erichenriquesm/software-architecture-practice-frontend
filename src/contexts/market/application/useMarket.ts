@@ -41,6 +41,11 @@ export const useMarket = (marketId: MaybeRefOrGetter<string>) => {
     bestAsk: topAsk,
     spread: computed(() => spreadOf(topBid.value, topAsk.value)),
     bookLoading: computed(() => groupedDepth.isPending.value && known.value),
+    depthLoading: computed(() => exactDepth.isPending.value && known.value),
+    tradesLoading: computed(() => trades.isPending.value && known.value),
+    summaryLoading: computed(() => summary.isPending.value && known.value),
+    /** When the book last changed, as the server reports it; undefined before the first change. */
+    changedAt: computed(() => summary.data.value?.asOf),
     notFound: computed(() => !known.value || failures.value.some((error) => isApiError(error) && error.kind === 'notFound')),
     delayed: computed(() => failures.value.length > 0),
     rateLimited: computed(() => failures.value.some((error) => isApiError(error) && error.kind === 'rateLimited')),

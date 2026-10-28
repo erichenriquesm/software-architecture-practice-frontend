@@ -1,13 +1,23 @@
+/* Orders list */
 .orders-panel { overflow: hidden; }
 .orders-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--line); }
-.orders-filters { display: flex; flex-wrap: wrap; gap: var(--space-1); }
-.orders-filter { font: 500 12px/16px var(--font-sans); padding: 5px 10px; border-radius: var(--radius-md); cursor: pointer; border: 1px solid transparent; background: transparent; color: var(--ink-muted); }
-.orders-filter:hover { color: var(--ink); }
-.orders-filter.is-active { border-color: var(--line-strong); background: var(--control); color: var(--ink); }
+.orders-filters { display: flex; flex-wrap: wrap; gap: 6px; }
+.orders-filter { display: inline-flex; align-items: center; gap: 6px; font: 500 12px/16px var(--font-sans); padding: 5px 6px 5px 12px; border-radius: 999px; cursor: pointer; border: 1px solid var(--line); background: transparent; color: var(--ink-muted); transition: color var(--duration-fast), border-color var(--duration-fast), background-color var(--duration-base); }
+.orders-filter:hover { color: var(--ink); border-color: var(--line-strong); }
+.orders-filter.is-active { border-color: color-mix(in srgb, var(--brass) 60%, var(--line-strong)); background: var(--brass-soft); color: var(--ink); }
+.orders-filter:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.orders-count { min-width: 20px; padding: 0 6px; border-radius: 999px; font: 500 11px/18px var(--font-mono); text-align: center; background: var(--surface-raised); color: var(--ink-muted); transition: background-color var(--duration-base), color var(--duration-base); }
+.orders-filter.is-active .orders-count { background: var(--brass); color: var(--ground); }
 .orders-alerts { display: grid; gap: var(--space-2); padding: var(--space-3) var(--space-4) 0; }
+.orders-retry { margin-top: 6px; justify-self: start; display: block; }
+.orders-alert-enter-active { transition: opacity var(--duration-base) var(--ease-out), transform var(--duration-slow) var(--ease-out); }
+.orders-alert-leave-active { transition: opacity var(--duration-fast) linear; }
+.orders-alert-enter-from { opacity: 0; transform: translateY(-6px); }
+.orders-alert-leave-to { opacity: 0; }
+
 .orders-scroll { overflow-x: auto; }
-.orders-table { width: 100%; min-width: 860px; border-collapse: collapse; font-size: 13px; }
-.orders-table th, .orders-table td { padding: var(--space-1) var(--space-3); text-align: left; height: 32px; }
+.orders-table { width: 100%; min-width: 900px; border-collapse: collapse; font-size: 13px; }
+.orders-table th, .orders-table td { padding: var(--space-1) var(--space-3); text-align: left; height: 44px; }
 .orders-table th:first-child, .orders-table td:first-child { padding-left: var(--space-4); }
 .orders-table th:last-child, .orders-table td:last-child { padding-right: var(--space-4); }
 .orders-table thead th { font: 600 11px/14px var(--font-sans); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-muted); background: var(--surface-raised); height: auto; padding-block: 6px; }
@@ -15,31 +25,195 @@
 .orders-table .is-num { text-align: right; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 .orders-table thead .is-num { font-family: var(--font-sans); }
 .orders-table .is-muted, .orders-table .is-muted a { color: var(--ink-muted); }
-.orders-link:hover { color: var(--brass); }
+.orders-row { position: relative; transition: background-color var(--duration-fast); }
+.orders-row:hover, .orders-row:focus-within { background: color-mix(in srgb, var(--surface-raised) 70%, transparent); }
+/* A side-coloured edge appears on the row under the pointer */
+.orders-row td:first-child { box-shadow: inset 2px 0 0 transparent; transition: box-shadow var(--duration-base); }
+.orders-row.is-buy:hover td:first-child, .orders-row.is-buy:focus-within td:first-child { box-shadow: inset 2px 0 0 var(--bid); }
+.orders-row.is-sell:hover td:first-child, .orders-row.is-sell:focus-within td:first-child { box-shadow: inset 2px 0 0 var(--ask); }
+.orders-link { text-decoration: none; }
+.orders-link:hover { color: var(--brass); text-decoration: underline; }
+.orders-side { font-weight: 500; }
 .orders-side-buy { color: var(--bid); }
 .orders-side-sell { color: var(--ask); }
+
+.orders-fill { display: inline-flex; align-items: center; gap: 8px; }
+.orders-fill-bar { position: relative; width: 44px; height: 4px; border-radius: 999px; background: var(--surface-raised); overflow: hidden; }
+.orders-fill-bar span { position: absolute; inset: 0 auto 0 0; border-radius: inherit; background: var(--brass); transition: width var(--duration-slow) var(--ease-out), background-color var(--duration-slow); }
+.orders-fill-bar.is-full span { background: var(--success); }
+.orders-fill-pct { min-width: 34px; color: var(--ink-muted); font-size: 11px; }
+
+/* A live order: its badge square breathes */
+@keyframes orders-breathe { 50% { opacity: .35; transform: scale(.7); } }
+.orders-status { display: inline-flex; }
+.orders-status.is-live .lt-badge::before { border-radius: 50%; animation: orders-breathe 1.8s var(--ease-in-out) infinite; }
+
+/* Cancel shows on hover or focus where there is a pointer; touch screens always see it */
+@media (hover: hover) and (pointer: fine) {
+  .orders-cancel { opacity: 0; transform: translateX(4px); transition: opacity var(--duration-base), transform var(--duration-base) var(--ease-out), background-color var(--duration-fast), color var(--duration-fast); }
+  .orders-row:hover .orders-cancel, .orders-row:focus-within .orders-cancel, .orders-cancel.is-loading { opacity: 1; transform: none; }
+}
+.orders-cancel:hover:not(:disabled) { color: var(--ink); background: var(--control); }
+
+.orders-row-enter-active { animation: lt-row-in var(--duration-slow) var(--ease-out); }
+.orders-row-leave-active { transition: opacity var(--duration-fast) linear; }
+.orders-row-leave-to { opacity: 0; }
+.orders-row-move { transition: transform var(--duration-slow) var(--ease-out); }
+
 .orders-skeleton { display: inline-block; width: 64px; height: 8px; }
-.orders-empty { display: grid; gap: var(--space-1); padding: var(--space-6) var(--space-4); }
+
+/* Empty: a tiny order book drawn with tokens, waiting for the first order */
+.orders-empty { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-6); padding: var(--space-8) var(--space-6); }
+.orders-empty-copy { display: grid; gap: var(--space-2); justify-items: start; max-width: 420px; }
 .orders-empty p { margin: 0; }
 .orders-empty .lt-muted { font-size: 13px; }
+.orders-empty-art { display: grid; gap: 4px; width: 112px; padding: 12px; border: 1px dashed var(--line-strong); border-radius: var(--radius-lg); }
+.orders-empty-art span { height: 6px; border-radius: 2px; justify-self: end; animation: orders-ghost 2.8s var(--ease-in-out) infinite alternate; }
+.orders-empty-art .is-ask { background: color-mix(in srgb, var(--ask) 40%, transparent); }
+.orders-empty-art .is-bid { background: color-mix(in srgb, var(--bid) 40%, transparent); }
+.orders-empty-art span:nth-child(1) { width: 45%; }
+.orders-empty-art span:nth-child(2) { width: 75%; animation-delay: -.7s; }
+.orders-empty-art span:nth-child(4) { width: 85%; animation-delay: -1.4s; }
+.orders-empty-art span:nth-child(5) { width: 55%; animation-delay: -2.1s; }
+.orders-empty-art .orders-empty-mid { width: 100%; height: 2px; margin: 4px 0; background: var(--brass); box-shadow: 0 0 8px var(--brass); animation: none; }
+@keyframes orders-ghost { to { opacity: .45; transform: scaleX(.85); transform-origin: right; } }
+.orders-empty-action { margin-top: var(--space-1); font: 500 13px/16px var(--font-sans); padding: 8px 14px; border-radius: var(--radius-md); border: 1px solid color-mix(in srgb, var(--brass) 55%, var(--line-strong)); background: var(--control); color: var(--ink); text-decoration: none; cursor: pointer; transition: background-color var(--duration-fast), box-shadow var(--duration-base); }
+.orders-empty-action:hover { color: var(--ink); background: var(--control-hover); box-shadow: var(--glow-brass); }
 
-.order-detail { width: 100%; max-width: 1040px; display: grid; gap: var(--space-6); }
-.order-back { font-size: 13px; justify-self: start; }
+/* Order detail */
+.order-detail { width: 100%; max-width: 1040px; margin: 0 auto; display: grid; gap: var(--space-6); }
+.order-back { font-size: 13px; justify-self: start; text-decoration: none; color: var(--ink-muted); display: inline-flex; gap: 6px; transition: color var(--duration-fast), gap var(--duration-base) var(--ease-out); }
+.order-back:hover { gap: 10px; color: var(--ink); }
 .order-header { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: var(--space-4); }
 .order-heading { display: grid; gap: 6px; min-width: 0; }
 .order-heading p { margin: 0; font-size: 13px; overflow-wrap: anywhere; }
 .order-title-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
+.order-title-mark { font-size: 14px; vertical-align: middle; margin-right: 10px; }
+.order-title-buy .order-title-mark { color: var(--bid); }
+.order-title-sell .order-title-mark { color: var(--ask); }
 .order-ink { color: var(--ink); }
-.order-execution { padding: var(--space-4); display: grid; gap: var(--space-3); }
-.order-execution-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--space-2); font-size: 13px; }
-.order-progress { height: 8px; background: var(--surface-raised); border-radius: var(--radius-sm); overflow: hidden; }
-.order-progress-fill { height: 100%; background: var(--brass); }
-.order-facts { margin: 0; padding-top: var(--space-1); display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: var(--space-4); }
+.order-alerts { display: grid; gap: var(--space-2); }
+.order-alerts:empty { display: none; }
+.order-error { display: grid; gap: var(--space-3); justify-items: start; }
+
+.order-grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(280px, 1fr); gap: var(--space-6); align-items: start; }
+.order-card { padding: var(--space-4) 20px; display: grid; gap: var(--space-4); }
+.order-card h2, .order-receipt h2 { margin: 0; }
+
+/* Stepper */
+.order-steps { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.order-step { position: relative; display: grid; gap: 10px; padding-right: var(--space-3); }
+.order-step:not(:last-child)::after { content: ''; position: absolute; top: 8px; left: 22px; right: 6px; height: 2px; border-radius: 2px; background: var(--line); }
+.order-step:not(:last-child)::before { content: ''; position: absolute; z-index: 1; top: 8px; left: 22px; right: 6px; height: 2px; border-radius: 2px; background: var(--brass); transform: scaleX(0); transform-origin: left; transition: transform 600ms var(--ease-out); transition-delay: calc(var(--step) * 140ms); }
+.order-step.is-reached.next-reached::before { transform: scaleX(1); }
+.order-step.is-unknown:not(:last-child)::after, .order-step.is-skipped:not(:last-child)::after { background: repeating-linear-gradient(90deg, var(--line-strong) 0 4px, transparent 4px 8px); }
+.order-step-marker { position: relative; width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--line-strong); background: var(--surface); transition: background-color var(--duration-slow), border-color var(--duration-slow); }
+.order-step.is-done .order-step-marker { border-color: var(--brass); background: var(--brass); }
+.order-step.is-done.tone-success .order-step-marker { border-color: var(--success); background: var(--success); }
+.order-step.is-done .order-step-marker::after { content: ''; position: absolute; left: 4px; top: 1px; width: 4px; height: 8px; border: solid var(--ground); border-width: 0 2px 2px 0; transform: rotate(45deg); animation: order-check var(--duration-slow) var(--ease-out) both; animation-delay: calc(var(--step) * 140ms); }
+@keyframes order-check { from { transform: rotate(45deg) scale(0); } }
+.order-step.is-current .order-step-marker { border-color: var(--brass); background: var(--brass-soft); }
+.order-step.is-current .order-step-marker::after { content: ''; position: absolute; inset: 3px; border-radius: 50%; background: var(--brass); }
+.order-step.is-current .order-step-marker { animation: order-current 2s var(--ease-out) infinite; }
+@keyframes order-current { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--brass) 55%, transparent); } 70%, 100% { box-shadow: 0 0 0 8px transparent; } }
+.order-step.is-failed .order-step-marker { border-color: var(--ink-muted); background: var(--surface-raised); }
+.order-step.is-failed.tone-danger .order-step-marker { border-color: var(--danger); }
+.order-step.is-failed .order-step-marker::before, .order-step.is-failed .order-step-marker::after { content: ''; position: absolute; left: 6px; top: 2px; width: 2px; height: 10px; border-radius: 1px; background: var(--ink-muted); transform: rotate(45deg); }
+.order-step.is-failed .order-step-marker::after { transform: rotate(-45deg); }
+.order-step.is-failed.tone-danger .order-step-marker::before, .order-step.is-failed.tone-danger .order-step-marker::after { background: var(--danger); }
+.order-step.is-unknown .order-step-marker, .order-step.is-skipped .order-step-marker { border-style: dashed; border-color: var(--ink-faint); }
+.order-step-text { display: grid; gap: 2px; }
+.order-step-label { font: 500 13px/18px var(--font-sans); }
+.order-step.is-upcoming .order-step-label, .order-step.is-skipped .order-step-label, .order-step.is-unknown .order-step-label { color: var(--ink-muted); }
+.order-step.is-failed.tone-danger .order-step-label { color: var(--danger); }
+.order-step.is-done.tone-success .order-step-label { color: var(--success); }
+.order-step-caption { font-size: 11px; line-height: 14px; color: var(--ink-faint); }
+.order-step.is-current .order-step-caption { color: var(--brass); }
+
+/* Execution: the fill ring and what it means in money */
+.order-execution { grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: var(--space-6); }
+.order-ring { position: relative; width: 132px; height: 132px; }
+.order-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.order-ring-track { fill: none; stroke: var(--surface-raised); stroke-width: 10; }
+.order-ring-fill { fill: none; stroke: var(--brass); stroke-width: 10; stroke-linecap: round; transition: stroke-dashoffset 1100ms var(--ease-out); filter: drop-shadow(0 0 6px color-mix(in srgb, var(--brass) 50%, transparent)); }
+.order-ring.tone-success .order-ring-fill { stroke: var(--success); filter: drop-shadow(0 0 6px color-mix(in srgb, var(--success) 50%, transparent)); }
+.order-ring.tone-ended .order-ring-fill { stroke: var(--ink-muted); filter: none; }
+.order-ring-value { position: absolute; inset: 0; display: grid; place-content: center; grid-auto-flow: column; align-items: baseline; font: 500 28px/32px var(--font-mono); }
+.order-ring-unit { font-size: 14px; color: var(--ink-muted); }
+.order-execution-body { display: grid; gap: var(--space-4); min-width: 0; }
+.order-execution-head { display: grid; gap: 4px; }
+.order-execution-amount { font-size: 15px; }
+.order-facts { margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: var(--space-4); }
 .order-facts div { display: grid; gap: 2px; }
 .order-facts dd { margin: 0; font-size: 13px; }
-.order-empty { padding: var(--space-6); display: grid; gap: var(--space-2); }
+
+/* Receipt: dotted leaders and a torn bottom edge */
+.order-receipt { position: relative; padding: var(--space-4) 20px 28px; display: grid; gap: var(--space-3);
+  mask: radial-gradient(6px at 50% calc(100% + 1px), transparent 98%, black) 50% / 16px 100%; }
+.order-receipt-lines { margin: 0; display: grid; gap: 10px; font-size: 13px; }
+.order-receipt-lines div { display: flex; align-items: baseline; gap: 8px; }
+.order-receipt-lines dt { color: var(--ink-muted); white-space: nowrap; }
+.order-receipt-lines div::after { content: ''; order: 1; flex: 1; height: 2px; align-self: center; margin-top: 6px; background: radial-gradient(circle, var(--line-strong) 0.8px, transparent 1px) 0 50% / 5px 2px repeat-x; }
+.order-receipt-lines dd { order: 2; margin: 0; text-align: right; }
+.order-receipt-lines .is-total { padding: 10px 0; margin: 2px 0; border-block: 1px dashed var(--line-strong); font-weight: 600; }
+.order-receipt-lines .is-total::after { display: none; }
+.order-receipt-lines .is-total dd { margin-left: auto; }
+.order-receipt-lines .is-id { flex-wrap: wrap; }
+.order-receipt-lines .is-id::after { display: none; }
+.order-receipt-lines .is-id dd { flex-basis: 100%; text-align: left; font-size: 11px; color: var(--ink-muted); overflow-wrap: anywhere; }
+
+/* Cancel confirmation */
+.order-cancel { position: relative; }
+.order-popover { position: absolute; z-index: 10; top: calc(100% + 8px); right: 0; width: 300px; display: grid; gap: var(--space-2); padding: var(--space-4); background: var(--surface-raised); border: 1px solid var(--line-strong); border-radius: var(--radius-lg); box-shadow: var(--shadow-overlay); transform-origin: top right; }
+.order-popover::before { content: ''; position: absolute; top: -6px; right: 24px; width: 10px; height: 10px; background: var(--surface-raised); border-left: 1px solid var(--line-strong); border-top: 1px solid var(--line-strong); transform: rotate(45deg); }
+.order-popover p { margin: 0; }
+.order-popover-title { font: 600 14px/20px var(--font-display); }
+.order-popover-detail { font-size: 12px; line-height: 16px; color: var(--ink-muted); }
+.order-popover-actions { display: flex; justify-content: flex-end; gap: var(--space-2); margin-top: var(--space-2); }
+.order-pop-enter-active { transition: opacity var(--duration-base) var(--ease-out), transform var(--duration-base) var(--ease-out); }
+.order-pop-leave-active { transition: opacity var(--duration-fast) linear, transform var(--duration-fast) linear; }
+.order-pop-enter-from, .order-pop-leave-to { opacity: 0; transform: translateY(-4px) scale(0.97); }
+
+/* Not found */
+.order-empty { padding: var(--space-8) var(--space-6); display: grid; gap: var(--space-2); justify-items: start; }
 .order-empty p { margin: 0; }
+.order-empty-art { display: grid; gap: 4px; width: 64px; margin-bottom: var(--space-2); }
+.order-empty-art span { height: 6px; border-radius: 2px; border: 1px dashed var(--line-strong); }
+.order-empty-art span:nth-child(2) { width: 70%; justify-self: end; }
+.order-empty-art span:nth-child(3) { width: 40%; justify-self: end; }
+
+/* Loading */
 .order-loading { display: grid; gap: var(--space-6); }
-.order-skeleton-title { display: block; width: 280px; max-width: 100%; height: 28px; }
-.order-skeleton-line { display: block; width: 240px; max-width: 100%; height: 12px; }
-.order-skeleton-bar { display: block; height: 8px; }
+.order-skeleton-title { display: block; width: 320px; max-width: 100%; height: 32px; }
+.order-skeleton-card { grid-template-columns: auto 1fr; align-items: center; gap: var(--space-6); }
+.order-skeleton-ring { display: block; width: 132px; height: 132px; border-radius: 50%; }
+.order-skeleton-lines { display: grid; gap: var(--space-3); padding: var(--space-4) 20px; }
+.order-skeleton-card .order-skeleton-lines { padding: 0; }
+.order-skeleton-line { display: block; height: 10px; }
+.order-skeleton-line.is-short { width: 60%; }
+
+@media (max-width: 860px) {
+  .order-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 600px) {
+  .order-steps { grid-template-columns: 1fr; gap: var(--space-4); }
+  .order-step { grid-template-columns: auto 1fr; align-items: start; gap: var(--space-3); }
+  .order-step:not(:last-child)::after, .order-step:not(:last-child)::before { top: 22px; bottom: -14px; left: 8px; right: auto; width: 2px; height: auto; }
+  .order-step:not(:last-child)::before { transform: scaleY(0); transform-origin: top; }
+  .order-step.is-reached.next-reached::before { transform: scaleY(1); }
+  .order-execution { grid-template-columns: 1fr; justify-items: center; text-align: center; }
+  .order-facts { text-align: left; }
+  .order-popover { right: auto; left: 0; width: min(300px, calc(100vw - 32px)); }
+  .order-popover::before { right: auto; left: 24px; }
+}
+
+/* Phones: each order becomes a card; the header row is hidden and every number carries its label */
+@media (max-width: 640px) {
+  .orders-table { min-width: 0; }
+  .orders-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .orders-table tbody tr.orders-row { display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; padding: 12px var(--space-4); }
+  .orders-table tbody tr.orders-row td { display: flex; justify-content: space-between; align-items: center; gap: 8px; height: auto; padding: 0; text-align: left; }
+  .orders-table tbody tr.orders-row td[data-label] { grid-column: 1 / -1; }
+  .orders-table tbody tr.orders-row td[data-label]::before { content: attr(data-label); font: 600 10px/12px var(--font-sans); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-muted); }
+  .orders-table tbody tr.orders-row td:last-child:empty { display: none; }
+}

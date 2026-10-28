@@ -25,9 +25,5 @@ a:hover { color: var(--brass); }
 .lt-text-field.has-error input { border-color: var(--danger); }
 .lt-text-field input:disabled { opacity: .45; cursor: not-allowed; }
 
-.lt-skeleton { background: var(--surface-raised); border-radius: var(--radius-sm); }
-@media (prefers-reduced-motion: no-preference) {
-  .lt-skeleton { animation: lt-pulse 1.4s ease-in-out infinite; }
-}
-@keyframes lt-pulse { 50% { opacity: .55; } }
+.lt-skeleton { border-radius: var(--radius-sm); }
 .lt-text-field.has-error .lt-field-hint { color: var(--danger); }

@@ -1,12 +1,15 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router';
-import { SignupForm } from '@/contexts/identity';
+import { AuthHero, SignupForm } from '@/contexts/identity';
 
 const router = useRouter();
 </script>
 
 <template>
-  <main class="page-centered">
-    <SignupForm @signed-in="router.push('/carteira')" />
+  <main class="auth-page">
+    <AuthHero />
+    <div class="auth-side">
+      <SignupForm @signed-in="router.push('/carteira')" />
+    </div>
   </main>
 </template>

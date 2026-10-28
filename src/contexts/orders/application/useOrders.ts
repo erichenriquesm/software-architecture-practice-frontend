@@ -3,7 +3,7 @@ import { computed, toValue } from 'vue';
 import type { MaybeRefOrGetter } from 'vue';
 import { openStatuses } from '@/entities/order';
 import { isApiError } from '@/shared/api/apiError';
-import { filterOrders, hasOpenOrder } from '../domain/order';
+import { filterCounts, filterOrders, hasOpenOrder } from '../domain/order';
 import type { Order, OrderFilter } from '../domain/order';
 import { useOrdersApi } from './ordersApiProvider';
 
@@ -33,8 +33,10 @@ export const useOrders = (accountId: MaybeRefOrGetter<string | undefined>, filte
 
   return {
     orders: computed(() => filterOrders(query.data.value ?? [], toValue(filter))),
+    counts: computed(() => filterCounts(query.data.value ?? [])),
     isLoading: query.isLoading,
     error: query.error,
+    refetch: () => query.refetch(),
   };
 };
 
@@ -52,5 +54,6 @@ export const useOrder = (orderId: MaybeRefOrGetter<string>) => {
     isLoading: query.isLoading,
     notFound: computed(() => isApiError(query.error.value) && query.error.value.kind === 'notFound'),
     error: query.error,
+    refetch: () => query.refetch(),
   };
 };

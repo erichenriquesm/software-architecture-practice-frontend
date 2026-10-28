@@ -7,12 +7,13 @@
 #   make logs        follow the dev server logs
 #   make test-unit   typecheck (vue-tsc), lint, architecture rules and unit/component tests
 #   make e2e         Playwright against the running platform, through the edge
+#   make screens     screenshots of every screen (desktop and phone) into test-results/screens, for a visual check
 #   make build       production image (runs test-unit inside the build)
 #   make deps        node_modules on your machine, for the editor
 
 COMPOSE = docker compose -f docker/docker-compose.yml
 
-.PHONY: up watch down logs test-unit e2e build deps
+.PHONY: up watch down logs test-unit e2e screens build deps
 
 up:
 	$(COMPOSE) up -d --build --wait frontend
@@ -31,6 +32,10 @@ test-unit:
 
 e2e:
 	$(COMPOSE) run --rm e2e
+
+screens:
+	mkdir -p test-results/screens
+	$(COMPOSE) run --rm e2e npx tsx e2e/screens/capture.ts test-results/screens
 
 build:
 	docker build -f docker/Dockerfile --target runtime -t trading-frontend .
