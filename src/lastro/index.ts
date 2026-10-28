@@ -20,3 +20,6 @@ export { default as LtTextField } from './components/LtTextField.vue';
 export { decimalsOfAsset, formatDecimal } from './format';
 export { useFlash } from './motion/useFlash';
 export type { FlashDirection } from './motion/useFlash';
+export { default as LtSegmented } from './components/LtSegmented.vue';
+export { useFitCount } from './layout/useFitCount';
+export { useMediaQuery } from './layout/useMediaQuery';
