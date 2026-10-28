@@ -1,7 +1,7 @@
 # Web client of the trading platform. Everything runs in containers; the backend (backend/: make up) must be up
 # for the app itself and for e2e, not for test-unit.
 #
-#   make up          build and start the dev server (Vite + HMR), served by the edge on http://127.0.0.1:8080
+#   make up          build and start the dev server (Vite + HMR) on http://localhost:5173; API routes are proxied to the edge
 #   make watch       same, in the foreground with Compose Watch (code changes without rebuild)
 #   make down        stop the dev server
 #   make logs        follow the dev server logs

@@ -1,4 +1,4 @@
-# The web client in development: Vite with HMR on the platform network, served by the edge on http://127.0.0.1:8080.
+# The web client in development on http://localhost:5173: Vite with HMR; API routes are proxied to the edge (trading-net).
 # Start the backend first (backend/: make up), then here: make up (or make watch for Compose Watch in the foreground).
 name: trading-frontend
 
@@ -23,6 +23,8 @@ services:
     build: { context: .., dockerfile: docker/Dockerfile, target: dev }
     container_name: frontend
     restart: unless-stopped
+    ports:
+      - "127.0.0.1:5173:5173"
     healthcheck:
       test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:5173/"]
       interval: 5s
@@ -43,9 +45,10 @@ services:
     working_dir: /app
     volumes: [../:/app]
     environment:
-      BASE_URL: http://edge
+      BASE_URL: http://localhost:5173
     command: ["sh", "-c", "npx playwright test"]
-    networks: [trading-net]
+    # Shares the dev server's network: the browser opens localhost:5173 like a developer does (a secure context for the cookie)
+    network_mode: service:frontend
 
 networks:
   trading-net:

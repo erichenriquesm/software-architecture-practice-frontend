@@ -2,6 +2,9 @@ import { createRouter, createWebHistory } from 'vue-router';
 import type { Router } from 'vue-router';
 import { useIdentityApi, useSessionStore } from '@/contexts/identity';
 import { defaultMarketId } from '@/entities/market';
+import { createLogger } from '@/shared/observability/logger';
+
+const logger = createLogger('router');
 
 declare module 'vue-router' {
   interface RouteMeta {
@@ -27,7 +30,12 @@ export const createAppRouter = (): Router => {
 
   router.beforeEach(async (to) => {
     const session = useSessionStore();
-    await session.restore(useIdentityApi());
+    try {
+      await session.restore(useIdentityApi());
+    } catch (error) {
+      // The API is unreachable: treat this navigation as signed out; the next one asks /me again
+      logger.warn('session check failed', { error: error instanceof Error ? error.message : String(error) });
+    }
     if (to.meta.access === 'signedIn' && !session.isAuthenticated) return { name: 'login', query: { voltar: to.fullPath } };
     if (to.meta.access === 'guest' && session.isAuthenticated) return { path: '/' };
     return true;

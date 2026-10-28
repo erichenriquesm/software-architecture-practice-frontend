@@ -4,18 +4,18 @@ Cliente web da plataforma de trading: Vue 3 + TypeScript, Pinia, composables, Vu
 
 ## Como rodar
 
-O front fala só com o edge (`http://127.0.0.1:8080`), na mesma origem da API. Suba o backend primeiro (`backend/`: `make up`) e depois:
+O front tem porta própria e fala com a API pelo edge (`8080`): o dev server do Vite repassa as rotas da API para ele, então o browser vê uma origem só e o cookie de sessão funciona sem CORS. Suba o backend primeiro (`backend/`: `make up`) e depois:
 
 ```bash
 make up
 ```
 
-Abra `http://127.0.0.1:8080`. Alterar código não exige rebuild: o Vite recarrega pelo HMR (`make watch` usa o Compose Watch em primeiro plano).
+Abra **http://localhost:5173** (use `localhost`: o cookie é `Secure`, e o browser só o aceita sem HTTPS em `localhost`). Alterar código não exige rebuild: o Vite recarrega pelo HMR (`make watch` usa o Compose Watch em primeiro plano).
 
 | Comando | O quê |
 |---|---|
 | `make test-unit` | typecheck (`vue-tsc`), lint, regras de arquitetura e testes de unidade e de componente |
-| `make e2e` | Playwright contra a plataforma no ar, pelo edge |
+| `make e2e` | Playwright contra a plataforma no ar (o container do teste usa a rede do dev server e abre `localhost:5173`) |
 | `make build` | imagem de produção (nginx com o `dist/`; o build roda o `test-unit`) |
 | `make deps` | `node_modules` na sua máquina, para o editor |
 

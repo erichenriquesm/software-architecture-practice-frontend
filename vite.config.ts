@@ -2,14 +2,18 @@ import { fileURLToPath } from 'node:url';
 import vue from '@vitejs/plugin-vue';
 import { defineConfig } from 'vitest/config';
 
+/** API routes of the edge; the dev server forwards them so the browser sees one origin (the cookie is SameSite=Strict). */
+const apiRoutes = '^/(signup|login|logout|me|deposit|withdraw|place_order|cancel_order)$|^/(accounts|orders|markets)/';
+const edge = process.env.EDGE_URL ?? 'http://edge';
+
 export default defineConfig({
   plugins: [vue()],
   resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
   server: {
     port: 5173,
     strictPort: true,
-    // The browser reaches the dev server through the edge on 127.0.0.1:8080, so HMR goes there too
-    hmr: { clientPort: 8080 },
+    // Exact match: a prefix like /me would also catch the /mercado page
+    proxy: { [apiRoutes]: { target: edge, changeOrigin: false, xfwd: true } },
   },
   test: {
     environment: 'jsdom',

@@ -1,4 +1,5 @@
 import { ApiError, isRetryable } from './apiError';
+import { randomId } from './randomId';
 
 export interface RequestOptions {
   readonly body?: unknown;
@@ -51,7 +52,7 @@ export const createHttpClient = (options: HttpClientOptions = {}): HttpClient =>
   const sleep = options.sleep ?? wait;
 
   const once = async <T>(method: string, path: string, request: RequestOptions): Promise<T> => {
-    const headers: Record<string, string> = { accept: 'application/json', 'x-request-id': crypto.randomUUID() };
+    const headers: Record<string, string> = { accept: 'application/json', 'x-request-id': randomId() };
     if (request.body !== undefined) headers['content-type'] = 'application/json';
     if (request.idempotencyKey) headers['idempotency-key'] = request.idempotencyKey;
     const signal = request.signal ? AbortSignal.any([request.signal, AbortSignal.timeout(timeoutMs)]) : AbortSignal.timeout(timeoutMs);
