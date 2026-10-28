@@ -4,6 +4,7 @@ coverage/
 test-results/
 playwright-report/
 e2e/.auth/
+media/
 *.tsbuildinfo
 
 # Placeholder the umbrella repository keeps in this folder
