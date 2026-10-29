@@ -1,9 +1,10 @@
-# Web client of the trading platform. Everything runs in containers; the backend (backend/: make up) must be up
-# for the app itself and for e2e, not for test-unit.
+# Web client of the trading platform. Everything runs in containers. The backend must be up for the app itself and
+# for e2e, not for test-unit; `make up` at the repository root starts both.
 #
 #   make up          build and start the dev server (Vite + HMR) on http://localhost:5173; API routes are proxied to the edge
 #   make watch       same, in the foreground with Compose Watch (code changes without rebuild)
 #   make down        stop the dev server
+#   make ps          the dev server container and its health
 #   make logs        follow the dev server logs
 #   make test-unit   typecheck (vue-tsc), lint, architecture rules and unit/component tests
 #   make e2e         Playwright against the running platform, through the edge
@@ -14,7 +15,7 @@
 
 COMPOSE = docker compose -f docker/docker-compose.yml
 
-.PHONY: up watch down logs test-unit e2e screens readme-media build deps
+.PHONY: up watch down ps logs test-unit e2e screens readme-media build deps
 
 up:
 	$(COMPOSE) up -d --build --wait frontend
@@ -24,6 +25,9 @@ watch:
 
 down:
 	$(COMPOSE) down
+
+ps:
+	$(COMPOSE) ps --format 'table {{.Name}}\t{{.Status}}'
 
 logs:
 	$(COMPOSE) logs -f frontend

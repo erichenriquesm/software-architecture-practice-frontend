@@ -4,7 +4,7 @@ Cliente web da plataforma de trading: Vue 3 + TypeScript, Pinia, composables, Vu
 
 ## Como rodar
 
-O front tem porta própria e fala com a API pelo edge (`8080`): o dev server do Vite repassa as rotas da API para ele, então o browser vê uma origem só e o cookie de sessão funciona sem CORS. Suba o backend primeiro (`backend/`: `make up`) e depois:
+O front tem porta própria e fala com a API pelo edge (`8080`): o dev server do Vite repassa as rotas da API para ele, então o browser vê uma origem só e o cookie de sessão funciona sem CORS. Pela raiz do [guarda-chuva](https://github.com/erichenriquesm/software-architecture-practice), `make up` sobe o backend e o front juntos. Para subir só o front, com o backend já de pé, rode aqui:
 
 ```bash
 make up
